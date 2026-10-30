@@ -127,9 +127,9 @@ body.dragging,body.dragging *{cursor:grabbing!important;user-select:none}body.dr
 body.running .slot{display:none}
 
 /* colonna destra */
-.side{display:flex;flex-direction:column;gap:10px;min-height:0;min-width:0}
+.side{display:flex;flex-direction:column;gap:10px;min-height:0;min-width:0;overflow-y:auto}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:3px;padding:10px;min-width:0}
-#props{flex:0 1 auto;max-height:52%;overflow:auto}
+#props{flex:0 0 auto;max-height:40%;overflow:auto}
 #vars{flex:0 0 auto;max-height:26%;overflow:auto}
 #cons{flex:1 1 150px;display:flex;flex-direction:column;min-height:130px}
 .card h3{margin:0 0 4px;font:600 14px var(--mono)}
@@ -174,6 +174,10 @@ td{padding:2px 6px;border-top:1px solid var(--line);overflow-wrap:anywhere}
 #tutorCard .tq span{display:flex;gap:6px}
 #tutorCard .tans{padding:6px 8px;border-radius:4px;border-left:3px solid var(--line)}
 #tutorCard .tans.ok{border-left-color:var(--ok,#2a8a4a)}#tutorCard .tans.no{border-left-color:var(--err)}
+#tutorCard .tin{display:flex;flex-direction:column;gap:4px;margin-top:8px;padding:8px;border:2px solid var(--accent);border-radius:4px;background:var(--accent-soft)}
+#tutorCard .tin label{font-size:13px;font-weight:600}
+#tutorCard .tin span{display:flex;gap:6px}
+#tutorCard .tin input{flex:1;min-width:0;border:1px solid var(--line);background:var(--bg);border-radius:3px;padding:6px 8px;font:13px var(--mono)}
 #tutorCard .tacts{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
 #tutorCard .tscore{font-size:12px;color:var(--muted);margin-top:6px}
 #watchCard{flex:0 0 auto}
@@ -2335,6 +2339,7 @@ const io={
       $('#inprompt').textContent=msg+' ('+tl(type)+')';
       $('#inform').hidden=false;$('#inval').value='';$('#inval').focus();
       setStatus(()=>t('ui.waiting'));
+      if(tOn())tRender();
     });
   }
 };
@@ -2502,10 +2507,13 @@ function tRender(){
     }else if(c.after)h+='<p class="tmsg">'+c.after+'</p>';
     if(tut.score.tot)h+=tScoreHtml();
   }
-  h+='<div class="tacts">'+(run&&ctl&&ctl.paused?'<button class="btn primary" data-tt="next">'+esc(M('Avanti','Next'))+'</button>':'')
+  const waiting=!!inputWait;
+  if(waiting)h+='<form id="tInform" class="tin"><label for="tInval">'+esc(M('Tocca a te! ','Your turn! ')+$('#inprompt').textContent)+'</label><span><input id="tInval" type="text" autocomplete="off" spellcheck="false"><button class="btn primary" type="submit">'+esc(t('ui.send'))+'</button></span></form>';
+  h+='<div class="tacts">'+(!waiting&&run&&ctl&&ctl.paused?'<button class="btn primary" data-tt="next">'+esc(M('Avanti','Next'))+'</button>':'')
     +(tut&&tut.mode==='step'?'<button class="btn" data-tt="why">'+esc(M('Perché?','Why?'))+'</button>':'')
     +(run&&ctl&&!ctl.free?'<button class="btn" data-tt="free">'+esc(M('Esegui tutto','Run all'))+'</button>':'')+'</div>';
   tutorEl.innerHTML=h;
+  if(waiting){const f=$('#tInval');if(f){f.focus();tutorEl.scrollIntoView({block:'nearest'})}}
 }
 const tScoreHtml=()=>'<div class="tscore">'+esc(M('Previsioni giuste','Correct predictions'))+': <b>'+tut.score.ok+'/'+tut.score.tot+'</b></div>';
 function tutorStart(){tut={mode:'idle',step:0,prev:{},score:{ok:0,tot:0},cur:null,msg:''};tRender()}
@@ -2542,6 +2550,13 @@ tutorEl.addEventListener('click',e=>{
   else if(a==='ans'&&tut&&tut.cur&&tut.cur.pred&&tut.cur.ans===null){
     const ok=(b.dataset.v==='1')===tut.cur.pred.val;tut.cur.ans={ok};tut.score.tot++;if(ok)tut.score.ok++;tRender();
   }
+});
+tutorEl.addEventListener('submit',e=>{
+  if(e.target.id!=='tInform')return;
+  e.preventDefault();if(!inputWait)return;
+  $('#inval').value=$('#tInval').value;
+  $('#inform').requestSubmit?$('#inform').requestSubmit():$('#inform').dispatchEvent(new Event('submit',{cancelable:true}));
+  tRender();
 });
 tutorEl.addEventListener('change',e=>{
   if(e.target.id==='tLevel'){SET.tlevel=e.target.value;saveSet();if(tut&&tut.cur&&tut.mode==='step'){const keep=tut.cur;try{const o=tText(keep.n,keep.ph||{});Object.assign(keep,{body:o.body,after:o.after})}catch(x){}}tRender()}
