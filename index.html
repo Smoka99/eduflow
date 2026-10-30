@@ -162,6 +162,20 @@ td{padding:2px 6px;border-top:1px solid var(--line);overflow-wrap:anywhere}
 #inform label{align-self:center;color:var(--muted);font-size:12px;max-width:45%}
 #inval{flex:1;min-width:0;border:1px solid var(--accent);background:var(--bg);border-radius:3px;padding:4px 7px;font:13px var(--mono)}
 
+#tutorCard{flex:0 0 auto;border-color:var(--accent)}
+#tutorCard .chead{align-items:center;flex-wrap:wrap}
+#tutorCard .topts{display:flex;align-items:center;gap:8px;font-size:12px}
+#tutorCard .topts label{display:flex;align-items:center;gap:4px;cursor:pointer}
+#tutorCard .tstep{font:12px var(--mono);color:var(--muted);margin-bottom:4px}
+#tutorCard .tmsg,#tutorCard .tans{margin:6px 0;line-height:1.5;font-size:13.5px}
+#tutorCard code{font:12.5px var(--mono);background:var(--accent-soft);padding:0 4px;border-radius:3px}
+#tutorCard .tdone{font-size:12px;color:var(--muted);margin:4px 0;line-height:1.7}
+#tutorCard .tq{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin:8px 0;padding:8px;border:1px dashed var(--accent);border-radius:4px}
+#tutorCard .tq span{display:flex;gap:6px}
+#tutorCard .tans{padding:6px 8px;border-radius:4px;border-left:3px solid var(--line)}
+#tutorCard .tans.ok{border-left-color:var(--ok,#2a8a4a)}#tutorCard .tans.no{border-left-color:var(--err)}
+#tutorCard .tacts{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+#tutorCard .tscore{font-size:12px;color:var(--muted);margin-top:6px}
 #watchCard{flex:0 0 auto}
 #watchCard input{width:100%;border:1px solid var(--line);background:var(--bg);border-radius:3px;padding:5px 7px;font:13px var(--mono)}
 #watchCard input:focus{border-color:var(--accent);outline:none;box-shadow:0 0 0 2px var(--accent-soft)}
@@ -347,6 +361,7 @@ pre.code code{display:block;width:max-content;min-width:100%}
   </div>
   <div class="grow"></div>
   <div class="grp">
+    <button class="btn" id="bTutor" aria-pressed="false" data-tip="ui:tutor"><svg class="st" viewBox="0 0 16 16"><path d="M1.5 6 8 3l6.5 3L8 9zM4 7.5v3.2c0 1 1.8 2 4 2s4-1 4-2V7.5"/></svg><span data-i18n="ui.tutor"></span></button>
     <button class="btn" id="bChal" data-tip="ui:challenges"><svg class="st" viewBox="0 0 16 16"><path d="M8 1.8l1.9 3.9 4.3.6-3.1 3 .7 4.3L8 11.6l-3.8 2 .7-4.3-3.1-3 4.3-.6z"/></svg><span data-i18n="ui.challenges"></span></button>
     <button class="btn" id="bCode" data-tip="ui:code"><svg class="st" viewBox="0 0 16 16"><path d="m5.5 4-4 4 4 4M10.5 4l4 4-4 4"/></svg><span data-i18n="ui.code"></span></button>
     <button class="btn ed" id="bExport" data-tip="ui:export" data-i18n="ui.export"></button>
@@ -372,6 +387,7 @@ pre.code code{display:block;width:max-content;min-width:100%}
     </section>
     <aside class="side">
       <section class="card" id="props"></section>
+      <section class="card" id="tutorCard" hidden></section>
       <section class="card" id="vars"></section>
       <section class="card" id="watchCard"><div class="chead" data-tip="ui:watch"><h4 data-i18n="ui.watch"></h4><span id="watchOut" class="wout"></span></div><input id="watchIn" type="text" data-i18n-ph="ui.watchPh" data-i18n-aria="ui.watch" spellcheck="false" autocomplete="off"></section>
       <section class="card" id="cons">
@@ -493,7 +509,7 @@ TXT.it={
   cvEmpty:'Il diagramma è vuoto: aggiungi dei blocchi per vedere il codice.',cvNote:'Traduzione diretta del diagramma. Controlla i tipi e i formati di stampa prima di usarla altrove.',
   cvTested:'Provato con questo compilatore o interprete',cvUntested:'Generato secondo le regole del linguaggio, non ancora provato',
   lines:n=>n+(n===1?' riga':' righe'),
-  bp:'Punto di interruzione',bpHelp:'Ferma l\'esecuzione prima di questo blocco',watch:'Osserva',watchPh:'Espressione, es. sum * 2',resetCh:'Azzera i progressi delle sfide',resetChD:'Cancella le sfide segnate come completate.',
+  bp:'Punto di interruzione',tutor:'Tutor',bpHelp:'Ferma l\'esecuzione prima di questo blocco',watch:'Osserva',watchPh:'Espressione, es. sum * 2',resetCh:'Azzera i progressi delle sfide',resetChD:'Cancella le sfide segnate come completate.',
   coffee:'Offrimi un caffè',aboutGit:'Il codice sorgente di EDUFLOW è su GitHub: puoi consultarlo, scaricarlo e segnalare idee o problemi.',aboutCoffee:'Se EDUFLOW ti è utile, puoi offrirmi un caffè: è un modo per ringraziare e per sostenere nuove funzioni.',
   challenges:'Sfide',chIntro:'Risolvi gli esercizi costruendo il diagramma. Il controllo prova il tuo programma con più valori e confronta ciò che scrive con il risultato atteso.',
   chDone:(a,b)=>a+' di '+b+' completate',chLevel:['Facile','Medio','Difficile'],chGoal:'Obiettivo',chTry:'Esempi di prova',chIn:'Input',chOut:'Output atteso',
@@ -531,6 +547,7 @@ TXT.it={
   zoom:{t:'Zoom',d:'Ingrandisce o riduce il diagramma. Con Ctrl e rotella del mouse puoi fare lo stesso.'},
   slot:{t:'Punto di inserimento',d:'Clicca per scegliere il blocco da inserire proprio qui.'},
   bp:{t:'Punto di interruzione',d:'Il programma si mette in pausa ogni volta che sta per eseguire questo blocco. Poi usa Passo o Continua.',k:'F9'},
+  tutor:{t:'Modalità Tutor',d:'Ti spiega ogni blocco con i valori reali, passo per passo, e ti fa prevedere le condizioni. Con il tutor attivo l\'esecuzione si ferma a ogni blocco: premi Avanti.'},
   watch:{t:'Osserva',d:'Scrivi un\'espressione: il suo valore viene ricalcolato a ogni blocco durante l\'esecuzione.'},
   coffee:{t:'Offrimi un caffè',d:'Apre la pagina per offrirmi un caffè. Non è obbligatorio: EDUFLOW resta gratuito.'},
   challenges:{t:'Sfide',d:'Esercizi guidati con controllo automatico: costruisci il diagramma e verifica se funziona con più valori di prova.'},
@@ -619,7 +636,7 @@ TXT.en={
   cvEmpty:'The diagram is empty: add some blocks to see the code.',cvNote:'A direct translation of the diagram. Check types and print formats before using it elsewhere.',
   cvTested:'Tested with this compiler or interpreter',cvUntested:'Generated from the language rules, not tested yet',
   lines:n=>n+(n===1?' line':' lines'),
-  bp:'Breakpoint',bpHelp:'Pauses the run before this block',watch:'Watch',watchPh:'Expression, e.g. sum * 2',resetCh:'Reset challenge progress',resetChD:'Clears the challenges marked as completed.',
+  bp:'Breakpoint',tutor:'Tutor',bpHelp:'Pauses the run before this block',watch:'Watch',watchPh:'Expression, e.g. sum * 2',resetCh:'Reset challenge progress',resetChD:'Clears the challenges marked as completed.',
   coffee:'Buy me a coffee',aboutGit:'EDUFLOW source code is on GitHub: browse it, download it, and report ideas or issues.',aboutCoffee:'If EDUFLOW is useful to you, you can buy me a coffee: a way to say thanks and to support new features.',
   challenges:'Challenges',chIntro:'Solve the exercises by building the diagram. The check runs your program with several values and compares what it writes with the expected result.',
   chDone:(a,b)=>a+' of '+b+' completed',chLevel:['Easy','Medium','Hard'],chGoal:'Goal',chTry:'Sample cases',chIn:'Input',chOut:'Expected output',
@@ -657,6 +674,7 @@ TXT.en={
   zoom:{t:'Zoom',d:'Enlarges or reduces the diagram. Ctrl and the mouse wheel do the same.'},
   slot:{t:'Insertion point',d:'Click to choose the block to insert right here.'},
   bp:{t:'Breakpoint',d:'The program pauses every time it is about to run this block. Then use Step or Continue.',k:'F9'},
+  tutor:{t:'Tutor mode',d:'Explains every block with the real values, step by step, and has you predict conditions. With the tutor on, the run pauses at every block: press Next.'},
   watch:{t:'Watch',d:'Type an expression: its value is recomputed at every block while the program runs.'},
   coffee:{t:'Buy me a coffee',d:'Opens the page to buy me a coffee. It is optional: EDUFLOW stays free.'},
   challenges:{t:'Challenges',d:'Guided exercises with automatic checking: build the diagram and test it with several sample values.'},
@@ -758,6 +776,9 @@ function manualSections(){
   {id:'debug',h:M('Debug: interruzioni e osserva','Debugging: breakpoints and watch'),b:IT?
    '<p><b>Punto di interruzione.</b> Seleziona un blocco e premi il pulsante <b>Punto di interruzione</b> (oppure F9): compare un pallino rosso. Quando il programma sta per eseguire quel blocco si mette in pausa. Continua con <b>Continua</b> o avanza con <b>Passo</b> (F10). In un ciclo la pausa avviene a ogni giro. Le interruzioni si salvano con il programma.</p><p><b>Osserva.</b> Nella casella <b>Osserva</b> scrivi un\'espressione, per esempio <code>sum * 2</code> o <code>v[i] &gt; 5</code>: il valore si aggiorna a ogni blocco durante l\'esecuzione.</p>'
    :'<p><b>Breakpoint.</b> Select a block and press the <b>Breakpoint</b> button (or F9): a red dot appears. When the program is about to run that block it pauses. Go on with <b>Continue</b> or advance with <b>Step</b> (F10). Inside a loop it pauses on every turn. Breakpoints are saved with the program.</p><p><b>Watch.</b> In the <b>Watch</b> box type an expression, for example <code>sum * 2</code> or <code>v[i] &gt; 5</code>: its value updates at every block while the program runs.</p>'},
+  {id:'tutor',h:M('Modalità Tutor','Tutor mode'),b:IT?
+   '<p><b>Modalità Tutor.</b> Premi <b>Tutor</b> nella barra (o attivala nelle Impostazioni). Con il tutor acceso l\'esecuzione si ferma a ogni blocco e il pannello <b>Tutor</b> spiega, con i valori reali, cosa sta per succedere: «calcolo <code>a + b</code> → <code>3 + 4</code> = 7, poi lo metto nella scatola <code>s</code>». Sotto vedi <b>Appena successo</b>, cioè quali variabili sono cambiate.</p><ul><li><b>Avanti</b> passa al blocco dopo; <b>Esegui tutto</b> finisce senza più pause; <b>Perché?</b> apre la spiegazione completa del blocco.</li><li><b>Previsioni:</b> davanti a un If, While o Do While il tutor chiede «vera o falsa?» prima di dirlo. Ti accorgi se hai capito davvero e il punteggio resta in basso.</li><li><b>Livello:</b> Principiante usa esempi con le scatole e spiega ogni passaggio; Normale è più breve.</li><li>Se c\'è un errore, il tutor lo spiega in parole semplici e suggerisce cosa controllare.</li></ul>'
+   :'<p><b>Tutor mode.</b> Press <b>Tutor</b> in the bar (or turn it on in Settings). With the tutor on, the run pauses at every block and the <b>Tutor</b> panel explains, with the real values, what is about to happen: “I calculate <code>a + b</code> → <code>3 + 4</code> = 7, then put it in the box <code>s</code>”. Below you see <b>Just happened</b>: which variables changed.</p><ul><li><b>Next</b> goes to the next block; <b>Run all</b> finishes with no more pauses; <b>Why?</b> opens the full explanation of the block.</li><li><b>Predictions:</b> before an If, While or Do While the tutor asks “true or false?” before telling you. You see whether you really understood, and the score stays at the bottom.</li><li><b>Level:</b> Beginner uses box examples and explains every step; Normal is shorter.</li><li>If there is an error, the tutor explains it in plain words and suggests what to check.</li></ul>'},
   {id:'code',h:M('La pagina Codice','The Code page'),b:IT?
    '<p>Il pulsante <b>Codice</b> apre una pagina con il programma tradotto in <b>JavaScript, Python, Java, C, C++, C#, Go, PHP, Ruby, Kotlin e Swift</b>. Scegli il linguaggio dall\'elenco, oppure attiva «Mostra tutti i linguaggi» per vederli uno sotto l\'altro. Ogni scheda ha il comando per eseguire il file e il pulsante Copia.</p><p><b>Cosa tenere presente.</b></p><ul><li>La divisione dà sempre un risultato con decimali, come nel diagramma.</li><li>Un numero con decimali assegnato a un Integer viene convertito in intero troncando.</li><li>I Boolean si stampano come <code>true</code>/<code>false</code> o <code>True</code>/<code>False</code>, secondo il linguaggio.</li><li>In C le stringhe sono array di caratteri: alcune funzioni di testo non sono tradotte e la pagina lo segnala.</li><li>Il codice per JavaScript funziona con Node.js e legge l\'Input dallo standard input.</li></ul><p>Ogni scheda indica se il codice è stato provato con un compilatore o un interprete reale.</p>'
    :'<p>The <b>Code</b> button opens a page with the program translated to <b>JavaScript, Python, Java, C, C++, C#, Go, PHP, Ruby, Kotlin and Swift</b>. Pick the language from the list, or turn on “Show all languages” to see them one under the other. Each card has the command to run the file and a Copy button.</p><p><b>Things to keep in mind.</b></p><ul><li>Division always gives a result with decimals, as in the diagram.</li><li>A number with decimals assigned to an Integer is converted by truncation.</li><li>Booleans print as <code>true</code>/<code>false</code> or <code>True</code>/<code>False</code>, depending on the language.</li><li>In C, strings are character arrays: some text functions are not translated and the page says so.</li><li>The JavaScript code runs on Node.js and reads Input from standard input.</li></ul><p>Each card says whether the code was tested with a real compiler or interpreter.</p>'},
@@ -1055,10 +1076,10 @@ async function execute(prog,io,ctl){
           break}
         case 'output':{await ctl.tick(n);io.out(fmt(ev(P(n.expr,LAB.expr())))+(n.nl===false?'':'\n'));break}
         case 'if':{await ctl.tick(n);await seq(cond(n.cond)?n.yes:n.no);break}
-        case 'while':{for(;;){await ctl.tick(n);if(!cond(n.cond))break;await seq(n.body)}break}
-        case 'do':{do{await seq(n.body);await ctl.tick(n)}while(cond(n.cond));break}
+        case 'while':{let wk=0;for(;;){await ctl.tick(n,{k:++wk});if(!cond(n.cond))break;await seq(n.body)}break}
+        case 'do':{do{await seq(n.body);await ctl.tick(n,{ph:'check'})}while(cond(n.cond));break}
         case 'for':{
-          await ctl.tick(n);
+          await ctl.tick(n,{ph:'start'});
           const name=ident(n.v);
           const from=needNum(ev(P(n.from,LAB.from())),LAB.from()),to=needNum(ev(P(n.to,LAB.to())),LAB.to());
           const st=(n.step||'').trim()===''?1:needNum(ev(P(n.step,LAB.step())),LAB.step());
@@ -1066,10 +1087,11 @@ async function execute(prog,io,ctl){
           let v=env.get(name);
           if(!v){v={type:Number.isInteger(from)&&Number.isInteger(st)?'Integer':'Real',value:from};env.set(name,v)}
           if(v.arr)throw new RunErr(M('"'+name+'" è un array','"'+name+'" is an array'));
+          let fk=0;
           for(let i=from;st>0?i<=to:i>=to;i+=st){
             v.value=coerce(v.type,i,name);
             await seq(n.body);
-            await ctl.tick(n);
+            await ctl.tick(n,{ph:'next',k:++fk});
           }
           break}
       }
@@ -2288,11 +2310,12 @@ function traceTick(c,n){
 }
 function makeCtl(paused){
   const c={paused,stopped:false,steps:0,waiter:null,env:null,last:0};
-  c.tick=async function(n){
+  c.tick=async function(n,ph){
     if(c.stopped)throw new StopErr();
     curId=n.id;markDirty=true;varsDirty=true;schedule();
     if(c.trace)traceTick(c,n);
     if(n.bp&&!c.paused&&!c.stopped)c.paused=true;
+    if(tOn()&&!c.stopped){c.ph=ph;tutorTick(c,n,ph);if(!c.free)c.paused=true}
     if(++c.steps>30000000)throw new RunErr(M('Il programma sembra non terminare: troppi passi eseguiti','The program seems to never end: too many steps executed'));
     if(c.paused){setStatus(()=>t('ui.paused'));setBtns();await new Promise(r=>{c.waiter=r});c.waiter=null;setStatus(()=>t('ui.running'));setBtns()}
     else{
@@ -2322,17 +2345,17 @@ $('#inform').addEventListener('submit',e=>{
 });
 async function startRun(paused){
   conEl.textContent='';outBuf=[];prevVars=new Map();failId=null;curId=null;
-  ctl=makeCtl(paused);ctl.trace={rows:[],pending:null,total:0};runState='running';lock(true);setBtns();setStatus(()=>t('ui.running'));renderVars();
+  if(tOn())tutorStart();ctl=makeCtl(paused||tOn());ctl.trace={rows:[],pending:null,total:0};runState='running';lock(true);setBtns();setStatus(()=>t('ui.running'));renderVars();
   const t0=performance.now();
   try{
     await execute(prog,io,ctl);
-    out('\n'+t('ui.endLine')+'\n','sys');
+    out('\n'+t('ui.endLine')+'\n','sys');if(tOn())tutorEnd('done');
     const steps=ctl.steps,ms=Math.round(performance.now()-t0);
     setStatus(()=>t('ui.finished',steps,ms));
   }catch(e){
-    if(e instanceof StopErr){out('\n'+t('ui.stopLine')+'\n','sys');setStatus(()=>t('ui.stopped'))}
+    if(e instanceof StopErr){out('\n'+t('ui.stopLine')+'\n','sys');if(tOn())tutorEnd('stop');setStatus(()=>t('ui.stopped'))}
     else if(e instanceof RunErr){
-      out('\n'+t('ui.errPrefix')+e.message+'\n','err');setStatus(()=>t('ui.error'));
+      out('\n'+t('ui.errPrefix')+e.message+'\n','err');if(tOn())tutorEnd('err',e);setStatus(()=>t('ui.error'));
       if(e.node){failId=e.node.id;curId=e.node.id;markDirty=true}
     }else{out('\n'+t('ui.internalErr')+e.message+'\n','err');setStatus(()=>t('ui.error'))}
   }finally{
@@ -2341,12 +2364,12 @@ async function startRun(paused){
     if(c.trace){const tr=c.trace;if(tr.pending&&tr.rows.length<TRACE_MAX&&c.env)tr.rows.push({step:tr.pending.step,label:tr.pending.label,vars:snapVars(c.env)});lastTrace=tr}
     if(!failId)curId=null;
     markDirty=true;schedule();lock(false);setBtns();
-    ctl=c;ctl.paused=false;setBtns();
+    ctl=c;ctl.paused=false;setBtns();if(tOn())tRender();
     if(!failId){const o=host.querySelector('.nd.run');if(o)o.classList.remove('run')}
   }
 }
 function doRun(){
-  if(runState==='idle'){if(!prog.body.length){setStatus(()=>t('ui.emptyDiagram'));return}startRun(false)}
+  if(runState==='idle'){if(!prog.body.length){setStatus(()=>t('ui.emptyDiagram'));return}startRun(tOn())}
   else if(ctl.paused){ctl.paused=false;if(ctl.waiter)ctl.waiter()}
 }
 function doStep(){
@@ -2363,6 +2386,172 @@ function doStop(){
 $('#bRun').onclick=doRun;$('#bStep').onclick=doStep;$('#bPause').onclick=doPause;$('#bStop').onclick=doStop;
 function setSpeedLabel(){$('#speedL').textContent=t('ui.speedN')[+$('#speed').value]}
 $('#speed').addEventListener('input',()=>{setSpeedLabel();SET.speed=+$('#speed').value;saveSet()});
+
+/* ---------- modalità Tutor ---------- */
+const tutorEl=$('#tutorCard');
+let tut=null;
+const tOn=()=>!!SET.tutor,tBeg=()=>SET.tlevel!=='std',tPredOn=()=>SET.tpred!==false;
+const tA=w=>/^[aeiou]/i.test(w)?'an':'a';
+const cd=s=>'<code>'+esc(s)+'</code>';
+function tShow(v){return typeof v==='string'?JSON.stringify(v):typeof v==='boolean'?(v?M('VERO','TRUE'):M('FALSO','FALSE')):fmt(v)}
+function tEval(src){
+  try{const r=parseC(src||'');if(r.err||!ctl||!ctl.env)return null;return {v:evalA(r.ast,ctl.env)}}catch(e){return null}
+}
+function tSubst(src){
+  if(!ctl||!ctl.env)return String(src);
+  return String(src).split(/("(?:[^"\\]|\\.)*")/).map((p,i)=>i%2?p:p.replace(/[A-Za-z_À-ÿ][\wÀ-ÿ]*(?![\wÀ-ÿ]*\s*[\(\[])/g,m=>{const v=ctl.env.get(m);return v&&!v.arr?tShow(v.value):m})).join('');
+}
+const tSame=(a,b)=>String(a).replace(/\s+/g,'')===String(b).replace(/\s+/g,'');
+function tShowSub(src){const s=tSubst(src);return tSame(s,src)?cd(src):cd(src)+' → '+cd(s)}
+function tText(n,ph){
+  const B=tBeg(),ty=n.type;let o={head:BN[ty],body:'',after:'',pred:null};
+  switch(ty){
+    case 'declare':{
+      const nm=(n.name||'').trim(),vt=tl(n.vt),sz=(n.size||'').trim();
+      if(sz){const s=tEval(sz);const k=s?tShow(s.v):sz;
+        o.body=B?M('Creo una <b>fila di '+esc(k)+' scatole</b> numerate da 0 a '+esc(s?String(s.v-1):k+'-1')+', tutte con l\'etichetta '+cd(nm)+'. In ognuna può stare un valore di tipo '+esc(vt)+'. All\'inizio sono tutte a '+esc(tShow(DEF[n.vt]))+'.','I create a <b>row of '+esc(k)+' boxes</b> numbered 0 to '+esc(s?String(s.v-1):k+'-1')+', all labelled '+cd(nm)+'. Each can hold '+tA(vt)+' '+esc(vt)+' value. At first they are all '+esc(tShow(DEF[n.vt]))+'.')
+          :M('Dichiaro l\'array '+cd(nm)+' di '+esc(vt)+' con '+esc(k)+' elementi (indici da 0).','Declares array '+cd(nm)+' of '+esc(vt)+' with '+esc(k)+' elements (indexes from 0).');
+      }else o.body=B?M('Creo una <b>scatola</b> con l\'etichetta '+cd(nm)+'. Nella scatola può stare solo un valore di tipo <b>'+esc(vt)+'</b>. All\'inizio contiene '+esc(tShow(DEF[n.vt]))+'. Senza questo blocco, il programma non saprebbe che '+cd(nm)+' esiste.','I create a <b>box</b> labelled '+cd(nm)+'. It can only hold '+tA(vt)+' <b>'+esc(vt)+'</b> value. At first it contains '+esc(tShow(DEF[n.vt]))+'. Without this block the program would not know '+cd(nm)+' exists.')
+        :M('Dichiara la variabile '+cd(nm)+' di tipo '+esc(vt)+' (valore iniziale '+esc(tShow(DEF[n.vt]))+').','Declares variable '+cd(nm)+' of type '+esc(vt)+' (initial value '+esc(tShow(DEF[n.vt]))+').');
+      break}
+    case 'assign':{
+      const e=tEval(n.expr),tg=(n.target||'').trim(),old=ctl.env.get(tg);
+      if(!e){o.body=M('Sto per mettere il risultato di '+cd(n.expr)+' dentro '+cd(tg)+'.','About to store the result of '+cd(n.expr)+' in '+cd(tg)+'.');break}
+      const oldTxt=old&&!old.arr?M(' Quello che c\'era prima ('+esc(tShow(old.value))+') viene cancellato.',' What was there before ('+esc(tShow(old.value))+') is erased.'):'';
+      o.body=B?M('Prima calcolo la parte a destra: '+tShowSub(n.expr)+', che fa <b>'+esc(tShow(e.v))+'</b>. Poi metto '+esc(tShow(e.v))+' nella scatola '+cd(tg)+'.'+oldTxt+' Attenzione: il simbolo = qui significa «metti dentro», non «è uguale a».','First I calculate the right-hand side: '+tShowSub(n.expr)+', which gives <b>'+esc(tShow(e.v))+'</b>. Then I put '+esc(tShow(e.v))+' into the box '+cd(tg)+'.'+oldTxt+' Careful: here = means “put inside”, not “is equal to”.')
+        :M(cd(tg)+' ← '+tShowSub(n.expr)+' = <b>'+esc(tShow(e.v))+'</b>.'+oldTxt,cd(tg)+' ← '+tShowSub(n.expr)+' = <b>'+esc(tShow(e.v))+'</b>.'+oldTxt);
+      break}
+    case 'input':{
+      const tg=(n.name||'').trim(),v=ctl.env.get(tg);
+      o.body=B?M('Il programma <b>si ferma e aspetta te</b>: scrivi un valore nella casella della console (qui sotto) e premi Invio. Quello che scrivi finisce nella scatola '+cd(tg)+(v?', che accetta solo valori di tipo <b>'+esc(tl(v.type))+'</b>':'')+'.','The program <b>stops and waits for you</b>: type a value in the console box below and press Enter. What you type goes into the box '+cd(tg)+(v?', which only accepts <b>'+esc(tl(v.type))+'</b> values':'')+'.')
+        :M('Legge un valore dalla console e lo salva in '+cd(tg)+(v?' ('+esc(tl(v.type))+')':'')+'.','Reads a value from the console and stores it in '+cd(tg)+(v?' ('+esc(tl(v.type))+')':'')+'.');
+      break}
+    case 'output':{
+      const e=tEval(n.expr);
+      o.body=e?(B?M('Calcolo '+tShowSub(n.expr)+': fa <b>'+esc(tShow(e.v))+'</b>. Poi lo scrivo nella console, così lo puoi leggere'+(n.nl===false?' (senza andare a capo)':' e vado a capo')+'.','I calculate '+tShowSub(n.expr)+': it gives <b>'+esc(tShow(e.v))+'</b>. Then I write it to the console so you can read it'+(n.nl===false?' (without a new line)':' and start a new line')+'.')
+        :M('Scrive nella console: '+tShowSub(n.expr)+' = <b>'+esc(tShow(e.v))+'</b>.','Writes to the console: '+tShowSub(n.expr)+' = <b>'+esc(tShow(e.v))+'</b>.'))
+        :M('Sto per scrivere nella console il valore di '+cd(n.expr)+'.','About to write the value of '+cd(n.expr)+' to the console.');
+      break}
+    case 'if':case 'while':case 'do':{
+      const c=tEval(n.cond),isB=c&&typeof c.v==='boolean';
+      const k=ph&&ph.k;
+      let intro;
+      if(ty==='if')intro=B?M('Qui il programma deve <b>scegliere una strada</b>. Controlla la condizione '+cd(n.cond)+'. Con i valori di adesso: '+tShowSub(n.cond)+'.','Here the program has to <b>choose a path</b>. It checks the condition '+cd(n.cond)+'. With the current values: '+tShowSub(n.cond)+'.')
+        :M('Se '+tShowSub(n.cond)+'…','If '+tShowSub(n.cond)+'…');
+      else if(ty==='while')intro=B?M((k>1?'Siamo tornati all\'inizio del ciclo. Prima':'Inizia un ciclo While: prima')+' di ogni giro il programma controlla la condizione '+cd(n.cond)+' (controllo n. '+(k||1)+'). Adesso: '+tShowSub(n.cond)+'.',(k>1?'We are back at the top of the loop. Before':'A While loop starts: before')+' each turn the program checks the condition '+cd(n.cond)+' (check no. '+(k||1)+'). Now: '+tShowSub(n.cond)+'.')
+        :M('While, controllo n. '+(k||1)+': '+tShowSub(n.cond),'While, check no. '+(k||1)+': '+tShowSub(n.cond));
+      else intro=B?M('Il corpo del Do While è stato eseguito <b>almeno una volta</b>. Ora controllo la condizione '+cd(n.cond)+': '+tShowSub(n.cond)+'.','The Do While body ran <b>at least once</b>. Now I check the condition '+cd(n.cond)+': '+tShowSub(n.cond)+'.')
+        :M('Do While, controllo: '+tShowSub(n.cond),'Do While, check: '+tShowSub(n.cond));
+      o.body=intro;
+      if(isB){
+        const r=c.v;
+        o.pred={val:r};
+        o.after=ty==='if'?(r?M('La condizione è <b>VERA</b>, quindi il programma prende il ramo «Sì».','The condition is <b>TRUE</b>, so the program takes the “Yes” branch.'):M('La condizione è <b>FALSA</b>, quindi il programma prende il ramo «No».','The condition is <b>FALSE</b>, so the program takes the “No” branch.'))
+          :ty==='while'?(r?M('È <b>VERA</b>: eseguo le istruzioni del ciclo, poi torno qui a ricontrollare.','It is <b>TRUE</b>: I run the loop body, then come back here to check again.'):M('È <b>FALSA</b>: il ciclo finisce e il programma continua sotto.','It is <b>FALSE</b>: the loop ends and the program goes on below.'))
+          :(r?M('È <b>VERA</b>: il Do While <b>ripete</b> il corpo del ciclo.','It is <b>TRUE</b>: the Do While <b>repeats</b> the loop body.'):M('È <b>FALSA</b>: esco dal ciclo e il programma continua.','It is <b>FALSE</b>: I leave the loop and the program goes on.'));
+      }
+      break}
+    case 'for':{
+      const nm=(n.v||'').trim();
+      if(ph&&ph.ph==='next'){
+        const cur=ctl.env.get(nm),s=tEval((n.step||'').trim()===''?'1':n.step),to=tEval(n.to);
+        if(cur&&s&&to&&typeof s.v==='number'&&typeof to.v==='number'){
+          const nx=cur.value+s.v,go=s.v>0?nx<=to.v:nx>=to.v;
+          o.body=B?M('Il giro n. '+ph.k+' è finito. Ora '+cd(nm)+' passa da '+esc(tShow(cur.value))+' a <b>'+esc(tShow(nx))+'</b> e il programma controlla se è ancora dentro il limite ('+esc(tShow(to.v))+'): '+(go?'<b>sì</b>, si fa un altro giro.':'<b>no</b>, il ciclo For finisce.'),'Turn no. '+ph.k+' is over. Now '+cd(nm)+' goes from '+esc(tShow(cur.value))+' to <b>'+esc(tShow(nx))+'</b> and the program checks whether it is still within the limit ('+esc(tShow(to.v))+'): '+(go?'<b>yes</b>, another turn.':'<b>no</b>, the For loop ends.'))
+            :M('Fine giro '+ph.k+': '+cd(nm)+' '+esc(tShow(cur.value))+' → '+esc(tShow(nx))+(go?', continua.':', fine del ciclo.'),'End of turn '+ph.k+': '+cd(nm)+' '+esc(tShow(cur.value))+' → '+esc(tShow(nx))+(go?', continues.':', loop ends.'));
+        }else o.body=M('Fine del giro: '+cd(nm)+' avanza di un passo.','End of turn: '+cd(nm)+' moves one step.');
+      }else{
+        const f=tEval(n.from),to=tEval(n.to),s=tEval((n.step||'').trim()===''?'1':n.step);
+        if(f&&to&&s&&typeof f.v==='number'&&typeof to.v==='number'&&typeof s.v==='number'&&s.v!==0){
+          const cnt=Math.max(0,Math.floor((to.v-f.v)/s.v)+1);
+          o.body=B?M('Inizia un ciclo <b>For</b>: '+cd(nm)+' parte da <b>'+esc(tShow(f.v))+'</b> e arriva a <b>'+esc(tShow(to.v))+'</b>, '+(s.v>0?'aumentando':'diminuendo')+' di '+esc(tShow(Math.abs(s.v)))+' a ogni giro. Le istruzioni dentro il ciclo verranno ripetute <b>'+cnt+'</b> '+(cnt===1?'volta':'volte')+'. Non devi aumentare '+cd(nm)+' da solo: lo fa il For.','A <b>For</b> loop starts: '+cd(nm)+' starts at <b>'+esc(tShow(f.v))+'</b> and goes to <b>'+esc(tShow(to.v))+'</b>, '+(s.v>0?'increasing':'decreasing')+' by '+esc(tShow(Math.abs(s.v)))+' every turn. The instructions inside will repeat <b>'+cnt+'</b> time'+(cnt===1?'':'s')+'. You do not need to change '+cd(nm)+' yourself: For does it.')
+            :M('For '+cd(nm)+' da '+esc(tShow(f.v))+' a '+esc(tShow(to.v))+' passo '+esc(tShow(s.v))+' → '+cnt+' giri.','For '+cd(nm)+' from '+esc(tShow(f.v))+' to '+esc(tShow(to.v))+' step '+esc(tShow(s.v))+' → '+cnt+' turns.');
+        }else o.body=M('Sto per iniziare il ciclo For su '+cd(nm)+'.','About to start the For loop on '+cd(nm)+'.');
+      }
+      break}
+  }
+  return o;
+}
+function tHint(msg){
+  const m=String(msg);
+  if(/non è stata dichiarata|has not been declared/.test(m))return M('Hai usato una variabile che non esiste ancora. Aggiungi un blocco <b>Declare</b> prima, oppure controlla di aver scritto il nome uguale (maiuscole comprese).','You used a variable that does not exist yet. Add a <b>Declare</b> block before it, or check the name is spelled exactly the same (capitals too).');
+  if(/fuori limiti|out of range/.test(m))return M('L\'indice è fuori dalla fila: con N scatole gli indici vanno da <b>0 a N-1</b>.','The index is outside the row: with N boxes the indexes go from <b>0 to N-1</b>.');
+  if(/zero/.test(m))return M('Non si può dividere per zero. Controlla con un blocco <b>If</b> che il divisore non sia 0.','You cannot divide by zero. Use an <b>If</b> block to check the divisor is not 0.');
+  if(/troppi passi|too many steps/.test(m))return M('Il ciclo non finisce mai: controlla che dentro il ciclo la variabile della condizione cambi, così prima o poi la condizione diventa falsa.','The loop never ends: check that inside the loop the variable in the condition changes, so the condition eventually becomes false.');
+  if(/vero o falso|true or false/.test(m))return M('Una condizione deve dare VERO o FALSO, per esempio <code>n &gt; 3</code> e non solo <code>n</code>.','A condition must give TRUE or FALSE, for example <code>n &gt; 3</code> and not just <code>n</code>.');
+  return M('Clicca il blocco evidenziato in rosso e controlla i campi: il messaggio dice cosa non va.','Click the block highlighted in red and check its fields: the message says what is wrong.');
+}
+function tDiffHtml(diff){
+  if(!diff||!diff.length)return '';
+  return '<div class="tdone"><b>'+esc(M('Appena successo','Just happened'))+':</b> '+diff.map(d=>d.o===undefined?cd(d.k+' = '+d.n):cd(d.k+': '+d.o+' → '+d.n)).join(' · ')+'</div>';
+}
+function tRender(){
+  if(!tOn()){tutorEl.hidden=true;return}
+  tutorEl.hidden=false;
+  const head='<div class="chead"><h4>'+esc(M('Tutor','Tutor'))+'</h4><span class="topts"><select id="tLevel" class="btn sm" aria-label="'+esc(M('Livello','Level'))+'"><option value="beg"'+(tBeg()?' selected':'')+'>'+esc(M('Principiante','Beginner'))+'</option><option value="std"'+(tBeg()?'':' selected')+'>'+esc(M('Normale','Normal'))+'</option></select><label><input type="checkbox" id="tPred"'+(tPredOn()?' checked':'')+'> '+esc(M('Previsioni','Predictions'))+'</label></span></div>';
+  let h=head;const run=runState!=='idle';
+  if(!tut||tut.mode==='idle')h+='<p class="tmsg">'+M('Ti accompagno <b>passo per passo</b>: premi <b>Esegui</b> o <b>Passo</b> e ti spiego cosa fa ogni blocco, con i valori veri.','I will guide you <b>step by step</b>: press <b>Run</b> or <b>Step</b> and I explain what each block does, with the real values.')+'</p>';
+  else if(tut.mode==='msg')h+='<p class="tmsg">'+tut.msg+'</p>'+(tut.score.tot?tScoreHtml():'');
+  else{
+    const c=tut.cur;
+    h+='<div class="tstep">'+esc(M('Passo','Step'))+' '+tut.step+' · <b>'+esc(c.head)+'</b></div>'+tDiffHtml(c.diff);
+    h+='<p class="tmsg">'+c.body+'</p>';
+    if(c.pred&&tPredOn()){
+      if(c.ans===null)h+='<div class="tq"><b>'+esc(M('Secondo te è vera o falsa?','Do you think it is true or false?'))+'</b><span><button class="btn" data-tt="ans" data-v="1">'+esc(M('Vera','True'))+'</button><button class="btn" data-tt="ans" data-v="0">'+esc(M('Falsa','False'))+'</button></span></div>';
+      else h+='<p class="tans '+(c.ans.ok?'ok':'no')+'"><b>'+esc(c.ans.ok?M('Giusto!','Correct!'):M('Non proprio.','Not quite.'))+'</b> '+c.after+'</p>';
+    }else if(c.after)h+='<p class="tmsg">'+c.after+'</p>';
+    if(tut.score.tot)h+=tScoreHtml();
+  }
+  h+='<div class="tacts">'+(run&&ctl&&ctl.paused?'<button class="btn primary" data-tt="next">'+esc(M('Avanti','Next'))+'</button>':'')
+    +(tut&&tut.mode==='step'?'<button class="btn" data-tt="why">'+esc(M('Perché?','Why?'))+'</button>':'')
+    +(run&&ctl&&!ctl.free?'<button class="btn" data-tt="free">'+esc(M('Esegui tutto','Run all'))+'</button>':'')+'</div>';
+  tutorEl.innerHTML=h;
+}
+const tScoreHtml=()=>'<div class="tscore">'+esc(M('Previsioni giuste','Correct predictions'))+': <b>'+tut.score.ok+'/'+tut.score.tot+'</b></div>';
+function tutorStart(){tut={mode:'idle',step:0,prev:{},score:{ok:0,tot:0},cur:null,msg:''};tRender()}
+function tutorTick(c,n,ph){
+  if(!tut)tutorStart();
+  const now=c.env?snapVars(c.env):{},prev=tut.prev||{},diff=[];
+  for(const k in now){if(!(k in prev))diff.push({k,n:now[k]});else if(prev[k]!==now[k])diff.push({k,o:prev[k],n:now[k]})}
+  tut.prev=now;tut.step++;tut.mode='step';
+  let o;try{o=tText(n,ph||{})}catch(e){o={head:BN[n.type],body:M('Sto per eseguire questo blocco.','About to run this block.'),after:'',pred:null}}
+  tut.cur=Object.assign(o,{n,diff,ans:null});
+  tRender();
+}
+function tutorEnd(kind,e){
+  if(!tut)tutorStart();
+  const diff=[];let vars='';
+  if(ctl&&ctl.env){const now=snapVars(ctl.env);for(const k in now){const p=tut.prev||{};if(!(k in p))diff.push({k,n:now[k]});else if(p[k]!==now[k])diff.push({k,o:p[k],n:now[k]})}vars=Object.keys(now).map(k=>cd(k+' = '+now[k])).join(' · ')}
+  tut.mode='msg';
+  if(kind==='done')tut.msg=tDiffHtml(diff)+M('<b>Il programma è finito!</b> ','<b>The program has finished!</b> ')+(vars?M('Valori finali: ','Final values: ')+vars+'. ':'')+M('Puoi rimetterlo in esecuzione, oppure aprire <b>Traccia</b> per rivedere tutti i passi.','You can run it again, or open <b>Trace</b> to review every step.');
+  else if(kind==='stop')tut.msg=M('Esecuzione fermata. Premi <b>Esegui</b> per ricominciare dall\'inizio.','Run stopped. Press <b>Run</b> to start again from the beginning.');
+  else tut.msg=M('<b>Ops, c\'è un errore.</b> ','<b>Oops, there is an error.</b> ')+esc(e&&e.message||'')+'<br>'+tHint(e&&e.message||'');
+  tRender();
+}
+function tWhy(){
+  const n=tut&&tut.cur&&tut.cur.n;if(!n)return;
+  const b=t('blk.'+n.type);
+  openModal('<header><h3>'+esc(BN[n.type])+'</h3><button class="btn" data-x>'+esc(t('ui.close'))+'</button></header><div class="about"><p><b>'+esc(b.short)+'</b></p><p>'+esc(b.long)+'</p><p><b>'+esc(t('tip.tags').example)+'</b><br><code>'+esc(b.example)+'</code></p><p class="hint">'+esc(b.tip)+'</p></div>');
+}
+tutorEl.addEventListener('click',e=>{
+  const b=e.target.closest('[data-tt]');if(!b)return;
+  const a=b.dataset.tt;
+  if(a==='next')doStep();
+  else if(a==='free'){if(ctl){ctl.free=true;if(ctl.paused){ctl.paused=false;if(ctl.waiter)ctl.waiter()}}tRender()}
+  else if(a==='why')tWhy();
+  else if(a==='ans'&&tut&&tut.cur&&tut.cur.pred&&tut.cur.ans===null){
+    const ok=(b.dataset.v==='1')===tut.cur.pred.val;tut.cur.ans={ok};tut.score.tot++;if(ok)tut.score.ok++;tRender();
+  }
+});
+tutorEl.addEventListener('change',e=>{
+  if(e.target.id==='tLevel'){SET.tlevel=e.target.value;saveSet();if(tut&&tut.cur&&tut.mode==='step'){const keep=tut.cur;try{const o=tText(keep.n,keep.ph||{});Object.assign(keep,{body:o.body,after:o.after})}catch(x){}}tRender()}
+  else if(e.target.id==='tPred'){SET.tpred=e.target.checked;saveSet();tRender()}
+});
+function applyTutor(){
+  const b=$('#bTutor');b.setAttribute('aria-pressed',String(tOn()));
+  tutorEl.hidden=!tOn();if(tOn()&&!tut)tutorStart();else tRender();
+}
+$('#bTutor').onclick=()=>{SET.tutor=!tOn();saveSet();applyTutor();if(!tOn()&&ctl&&ctl.paused&&runState!=='idle'){}};
 
 /* ---------- finestre ---------- */
 const modal=$('#modal'),sheet=$('#sheet');
@@ -2508,6 +2697,7 @@ function settingsPane(){
    +opt(t('ui.theme'),t('ui.themeD'),seg('data-theme-set',SET.theme,[['auto',t('ui.themeAuto')],['light',t('ui.themeLight')],['dark',t('ui.themeDark')]]))
    +opt(t('ui.tips'),t('ui.tipsD'),'<input type="checkbox" id="optTips" aria-label="'+esc(t('ui.tips'))+'" '+(SET.tips?'checked':'')+'>')
    +opt(t('ui.grid'),t('ui.gridD'),'<input type="checkbox" id="optGrid" aria-label="'+esc(t('ui.grid'))+'" '+(SET.grid?'checked':'')+'>')
+   +opt(M('Modalità Tutor','Tutor mode'),M('Ti spiega ogni blocco con i valori reali, passo per passo, e ti chiede di prevedere le condizioni.','Explains every block with the real values, step by step, and asks you to predict conditions.'),'<input type="checkbox" id="optTutor" aria-label="Tutor" '+(SET.tutor?'checked':'')+'>')
    +opt(t('ui.defSpeed'),t('ui.defSpeedD'),'<select id="optSpeed" class="btn" aria-label="'+esc(t('ui.defSpeed'))+'">'+t('ui.speedN').map((s,i)=>'<option value="'+i+'" '+(SET.speed===i?'selected':'')+'>'+esc(s)+'</option>').join('')+'</select>')
    +opt(t('ui.resetCh'),t('ui.resetChD'),'<button class="btn" data-resetch>'+esc(t('ui.resetCh'))+'</button>')
    +opt(t('ui.reset'),t('ui.resetD'),'<button class="btn" data-reset>'+esc(t('ui.reset'))+'</button>');
@@ -2542,7 +2732,8 @@ function filterManual(q){
 sheet.addEventListener('input',e=>{if(e.target.id==='msearch')filterManual(e.target.value)});
 sheet.addEventListener('change',e=>{
   const i=e.target.id;
-  if(i==='optTips'){SET.tips=e.target.checked;saveSet();hideTip()}
+  if(i==='optTutor'){SET.tutor=e.target.checked;saveSet();applyTutor()}
+  else if(i==='optTips'){SET.tips=e.target.checked;saveSet();hideTip()}
   else if(i==='optGrid'){SET.grid=e.target.checked;saveSet();applyGrid()}
   else if(i==='optSpeed'){SET.speed=+e.target.value;saveSet();$('#speed').value=SET.speed;setSpeedLabel()}
 });
@@ -2554,7 +2745,7 @@ sheet.addEventListener('click',e=>{
   else if(b.dataset.themeSet){SET.theme=b.dataset.themeSet;saveSet();applyTheme();openSettings('settings')}
   else if(b.dataset.m){const el=document.getElementById('m-'+b.dataset.m);if(el)el.scrollIntoView({block:'start'})}
   else if(b.hasAttribute('data-resetch')){SET.done=[];saveSet();b.textContent=t('ui.copied')}
-  else if(b.hasAttribute('data-reset')){SET={lang:null,theme:'auto',tips:true,grid:true,speed:1,done:SET.done||[],active:SET.active||null};LANG=(String(navigator.language||'').toLowerCase().startsWith('it'))?'it':'en';saveSet();pcache.clear();$('#speed').value=1;applyTheme();applyGrid();applyLang();openSettings('settings')}
+  else if(b.hasAttribute('data-reset')){SET={lang:null,theme:'auto',tips:true,grid:true,speed:1,done:SET.done||[],active:SET.active||null,tutor:false};LANG=(String(navigator.language||'').toLowerCase().startsWith('it'))?'it':'en';saveSet();pcache.clear();$('#speed').value=1;applyTheme();applyGrid();applyLang();applyTutor();openSettings('settings')}
   else if(b.hasAttribute('data-dl')){
     const ext=b.dataset.dl,txt=$('#expTa').value,
       nm=(prog.name||'eduflow').replace(/[^\w\-À-ÿ ]+/g,'').trim().replace(/\s+/g,'_')||'eduflow',
@@ -2602,7 +2793,7 @@ function applyLang(){
   document.querySelectorAll('[data-i18n-aria]').forEach(e=>e.setAttribute('aria-label',t(e.dataset.i18nAria)));
   buildStencil();buildExamples();setSpeedLabel();
   $('#cvLangs').setAttribute('aria-label',t('ui.cvTitle'));
-  setBtns();setStatus(statusFn);render();renderProps();renderVars();renderChbar();
+  setBtns();setStatus(statusFn);render();renderProps();renderVars();renderChbar();tRender();
   if(!$('#codeview').hidden)renderCode();
 }
 
@@ -2708,7 +2899,7 @@ document.addEventListener('keydown',e=>{
 (function init(){
   $('#speed').value=SET.speed;
   $('#watchIn').value=SET.watch||'';
-  applyTheme();applyGrid();
+  applyTheme();applyGrid();applyTutor();
   let o=null;
   try{const s=localStorage.getItem('flussi.v1');if(s){o=JSON.parse(s);if(!o||!Array.isArray(o.body)||!o.body.length)o=null}}catch(e){o=null}
   hist=[];
