@@ -1,0 +1,2616 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>EDUFLOW</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: banco da disegno. Barra comandi in alto; sotto, due viste: diagramma (blocchi | tavola | pannelli) oppure pagina Codice (linguaggi | sorgente). */
+:root{
+  --bg:#e9edf3; --panel:#f8fafc; --ink:#0f1b2d; --muted:#586579; --line:#cbd4e0;
+  --edge:#3a4a63; --stroke:#2a3b55; --accent:#1d4ed8; --accent-ink:#ffffff; --accent-soft:#dbe6ff;
+  --grid:#c3cddb; --f-decl:#e8edf4; --f-assign:#ffffff; --f-in:#dbe8ff; --f-out:#d9f2e6; --f-ctl:#fff0cc;
+  --run:#ffd23f; --run-ink:#1d1500; --err:#c62828; --err-bg:#ffe1e1; --ok:#1b7a47; --shadow:rgba(15,27,45,.18);
+  --hk:#0b5fa5; --hs:#1b7a47; --hn:#a8500a; --hc:#6b7a90;
+  --ui:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0b111d; --panel:#111a2a; --ink:#dce6f7; --muted:#8a9ab3; --line:#22304a;
+  --edge:#7d92b4; --stroke:#8da4c9; --accent:#6e9bff; --accent-ink:#0b111d; --accent-soft:#1c2c4d;
+  --grid:#1a2538; --f-decl:#182236; --f-assign:#141d30; --f-in:#16305a; --f-out:#123a2c; --f-ctl:#3b2f12;
+  --run:#e3b100; --run-ink:#1b1400; --err:#ff7a7a; --err-bg:#4a1a1a; --ok:#5ed49a; --shadow:rgba(0,0,0,.5);
+  --hk:#7fb2ff; --hs:#6fd6a5; --hn:#f0b35c; --hc:#7284a0;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0b111d; --panel:#111a2a; --ink:#dce6f7; --muted:#8a9ab3; --line:#22304a;
+  --edge:#7d92b4; --stroke:#8da4c9; --accent:#6e9bff; --accent-ink:#0b111d; --accent-soft:#1c2c4d;
+  --grid:#1a2538; --f-decl:#182236; --f-assign:#141d30; --f-in:#16305a; --f-out:#123a2c; --f-ctl:#3b2f12;
+  --run:#e3b100; --run-ink:#1b1400; --err:#ff7a7a; --err-bg:#4a1a1a; --ok:#5ed49a; --shadow:rgba(0,0,0,.5);
+  --hk:#7fb2ff; --hs:#6fd6a5; --hn:#f0b35c; --hc:#7284a0;
+  color-scheme:dark}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:13px/1.45 var(--ui);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:10px;display:grid;grid-template-rows:auto minmax(0,1fr);gap:10px}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+code{font-family:var(--mono)}
+
+/* barra superiore */
+.top{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px}
+.brand{display:flex;align-items:center;gap:8px;font:600 15px var(--mono);letter-spacing:.02em}
+.brand svg{width:22px;height:22px;stroke:var(--accent);fill:none;stroke-width:1.8}
+.grp{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.sep{width:1px;align-self:stretch;background:var(--line)}
+.grow{flex:1 1 0;min-width:0}
+.btn{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 10px;border:1px solid var(--line);
+  background:var(--panel);border-radius:3px;cursor:pointer;white-space:nowrap}
+.btn svg{width:14px;height:14px;fill:currentColor;stroke:currentColor;stroke-width:0}
+.btn svg.st{fill:none;stroke-width:1.6}
+.btn:hover:not(:disabled){border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+.btn.icon{width:30px;padding:0;justify-content:center}
+select.btn{padding:0 6px;max-width:210px}
+#pname{height:30px;width:190px;border:1px solid transparent;background:transparent;border-radius:3px;padding:0 8px;font-weight:600}
+#pname:hover,#pname:focus{border-color:var(--line);background:var(--panel)}
+.speed{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:12px}
+.speed input{width:84px;accent-color:var(--accent)}
+body.cv .ed{display:none}
+
+#views{min-height:0;min-width:0;display:grid}
+#views>*{min-height:0;min-width:0}
+
+/* area di lavoro */
+.work{display:grid;grid-template-columns:158px minmax(0,1fr) 350px;gap:10px;min-height:0}
+.stencil{background:var(--panel);border:1px solid var(--line);border-radius:3px;padding:8px;display:flex;flex-direction:column;gap:4px;overflow:auto}
+.stencil h4,.side h4{margin:0 0 4px;font:600 10.5px var(--ui);letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.blk{display:flex;align-items:center;gap:8px;width:100%;padding:5px 6px;border:1px solid transparent;background:transparent;border-radius:3px;cursor:pointer;text-align:left;font-family:var(--mono);font-size:12.5px}
+.blk:hover{border-color:var(--accent);background:var(--accent-soft)}
+.blk svg,.menu button svg{width:28px;height:18px;flex:none;fill:var(--g,var(--f-assign));stroke:var(--stroke);stroke-width:1.4;stroke-linejoin:round}
+.blk[data-t=declare],.menu [data-t=declare]{--g:var(--f-decl)}
+.blk[data-t=input],.menu [data-t=input]{--g:var(--f-in)}
+.blk[data-t=output],.menu [data-t=output]{--g:var(--f-out)}
+.blk[data-t=if],.blk[data-t=while],.blk[data-t=for],.blk[data-t=do],.menu [data-t=if],.menu [data-t=while],.menu [data-t=for],.menu [data-t=do]{--g:var(--f-ctl)}
+.stencil p{margin:8px 2px 0;color:var(--muted);font-size:11.5px}
+body.running .stencil,body.running .menu{pointer-events:none;opacity:.5}
+
+.boardwrap{position:relative;min-width:0;min-height:0;border:1px solid var(--line);border-radius:3px;overflow:hidden;background:var(--bg)}
+.board{position:absolute;inset:0;overflow:auto;cursor:grab;
+  background-image:radial-gradient(var(--grid) 1px,transparent 1.2px);background-size:20px 20px;background-attachment:local}
+.board.nogrid{background-image:none}
+.board.pan{cursor:grabbing;user-select:none}
+#host{display:flex;justify-content:center;width:max-content;min-width:100%}
+#host svg{display:block;flex:none}
+.zoom{position:absolute;right:12px;bottom:12px;display:flex;gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:3px;padding:3px;box-shadow:0 2px 8px var(--shadow)}
+.zoom .btn{height:26px;border-color:transparent;background:transparent}
+.zoom .z{min-width:46px;justify-content:center;font:12px var(--mono)}
+
+.menu{position:fixed;z-index:30;background:var(--panel);border:1px solid var(--stroke);border-radius:3px;padding:4px;box-shadow:0 6px 24px var(--shadow);display:flex;flex-direction:column;min-width:150px}
+.menu[hidden]{display:none}
+.menu button{display:flex;align-items:center;gap:8px;padding:5px 8px;border:0;background:transparent;border-radius:3px;cursor:pointer;text-align:left;font-family:var(--mono);font-size:12.5px}
+.menu button:hover{background:var(--accent-soft)}
+
+/* diagramma */
+.e{fill:none;stroke:var(--edge);stroke-width:1.6;stroke-linejoin:round}
+#ah path{fill:var(--edge)}
+.nd{cursor:pointer}
+.nd .sh{fill:var(--f,var(--f-assign));stroke:var(--stroke);stroke-width:1.5}
+.nd text{font:400 13px var(--mono);fill:var(--ink);text-anchor:middle;dominant-baseline:central;pointer-events:none}
+.t-declare{--f:var(--f-decl)}.t-input{--f:var(--f-in)}.t-output{--f:var(--f-out)}
+.t-if,.t-while,.t-for,.t-do{--f:var(--f-ctl)}
+.t-comment .sh{fill:none;stroke-dasharray:4 3}.t-comment text{font-style:italic;fill:var(--muted)}
+.nd:hover .sh{stroke:var(--accent)}
+.nd.sel .sh{stroke:var(--accent);stroke-width:2.6}
+.nd.err .sh{stroke:var(--err);stroke-dasharray:5 3}
+.nd.run .sh{fill:var(--run);stroke:var(--run-ink)}
+.nd.run text{fill:var(--run-ink)}
+.nd.fail .sh{fill:var(--err-bg);stroke:var(--err);stroke-width:2.4;stroke-dasharray:none}
+.term{cursor:default}.term .sh{fill:var(--ink);stroke:var(--ink)}.term text{fill:var(--bg);font-weight:600}
+.lbl{font:600 11px var(--ui);fill:var(--muted)}
+.slot{cursor:pointer}.slot .hit{fill:transparent}
+.slot .dot{fill:var(--edge);transform-box:fill-box;transform-origin:center;transition:transform .1s}
+.slot .plus{stroke:var(--accent-ink);stroke-width:1.6;opacity:0;pointer-events:none}
+.slot:hover .dot{transform:scale(3.4);fill:var(--accent)}.slot:hover .plus{opacity:1}
+body.running .slot{display:none}
+
+/* colonna destra */
+.side{display:flex;flex-direction:column;gap:10px;min-height:0;min-width:0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:3px;padding:10px;min-width:0}
+#props{flex:0 1 auto;max-height:52%;overflow:auto}
+#vars{flex:0 0 auto;max-height:26%;overflow:auto}
+#cons{flex:1 1 150px;display:flex;flex-direction:column;min-height:130px}
+.card h3{margin:0 0 4px;font:600 14px var(--mono)}
+.psub{margin:0 0 10px;color:var(--muted);font-size:12px}
+.fld{display:flex;flex-direction:column;gap:3px;margin-bottom:8px}
+.fld label{font-size:11.5px;color:var(--muted)}
+.fld input[type=text],.fld select,.fld textarea{width:100%;border:1px solid var(--line);background:var(--bg);border-radius:3px;padding:5px 7px;font:13px var(--mono)}
+.fld input:focus,.fld select:focus,.fld textarea:focus{border-color:var(--accent);outline:none;box-shadow:0 0 0 2px var(--accent-soft)}
+.fld.chk{flex-direction:row;align-items:center;gap:8px}
+fieldset{border:0;padding:0;margin:0;min-width:0}
+.errs{color:var(--err);font-size:12px;margin:0 0 8px;white-space:pre-line}
+.errs:empty{display:none}
+.acts{display:flex;flex-wrap:wrap;gap:6px}
+.acts .btn{height:26px;padding:0 8px;font-size:12px}
+.help{color:var(--muted);font-size:12px}
+.help p{margin:0 0 8px}
+table{border-collapse:collapse;width:100%;font:12px var(--mono)}
+th{font:600 10.5px var(--ui);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);text-align:left;padding:0 6px 4px}
+td{padding:2px 6px;border-top:1px solid var(--line);overflow-wrap:anywhere}
+#vars td:nth-child(2){color:var(--muted)}
+.chg td{animation:flash .7s}
+@keyframes flash{from{background:var(--accent-soft)}}
+.chead{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:6px}
+.chead h4{margin:0}
+#status{font:12px var(--mono);color:var(--muted)}
+#con{flex:1;min-height:0;overflow:auto;margin:0;padding:8px;background:var(--bg);border:1px solid var(--line);border-radius:3px;font:12.5px/1.5 var(--mono);white-space:pre-wrap;overflow-wrap:anywhere}
+#con .err{color:var(--err)}#con .in{color:var(--accent)}#con .sys{color:var(--muted)}
+#inform{display:flex;gap:6px;margin-top:6px}
+#inform[hidden]{display:none}
+#inform label{align-self:center;color:var(--muted);font-size:12px;max-width:45%}
+#inval{flex:1;min-width:0;border:1px solid var(--accent);background:var(--bg);border-radius:3px;padding:4px 7px;font:13px var(--mono)}
+
+#watchCard{flex:0 0 auto}
+#watchCard input{width:100%;border:1px solid var(--line);background:var(--bg);border-radius:3px;padding:5px 7px;font:13px var(--mono)}
+#watchCard input:focus{border-color:var(--accent);outline:none;box-shadow:0 0 0 2px var(--accent-soft)}
+#watchCard .chead{margin-bottom:6px}
+.wout{font:12.5px var(--mono);color:var(--accent);overflow-wrap:anywhere;text-align:right}
+.wout.bad{color:var(--err)}
+.bpd{fill:var(--err);stroke:var(--bg);stroke-width:1.5;pointer-events:none}
+.btn[aria-pressed=true]{background:var(--accent-soft);border-color:var(--accent)}
+
+/* suggerimenti al passaggio del mouse */
+.tip{position:fixed;z-index:70;max-width:min(370px,calc(100vw - 24px));background:var(--panel);color:var(--ink);border:1px solid var(--stroke);border-radius:4px;padding:10px 12px;box-shadow:0 8px 28px var(--shadow);font-size:12.5px;line-height:1.45;pointer-events:none}
+.tip[hidden]{display:none}
+.tip .th{font:600 14px var(--mono);display:flex;justify-content:space-between;gap:12px}
+.tip .th kbd{font:11px var(--mono);border:1px solid var(--line);border-radius:3px;padding:0 5px;color:var(--muted);align-self:center}
+.tip p{margin:4px 0}.tip .dim{color:var(--muted)}
+.tip .tl{margin:9px 0 2px;font:600 10.5px var(--ui);letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.tip ul{margin:0;padding-left:16px}.tip li{margin:2px 0}
+.tip code{font:12px var(--mono);background:var(--bg);padding:1px 5px;border-radius:2px;overflow-wrap:anywhere}
+.tip .terr{color:var(--err);margin:0 0 6px}
+
+/* EDUFLOW: marchio, caffè, sfide, traccia */
+.bn{letter-spacing:.06em}.bn b{color:var(--accent);font-weight:600}
+.btn.coffee{text-decoration:none;color:var(--ink)}
+.btn.coffee svg{stroke:var(--hn)}
+.btn.sm{height:22px;padding:0 8px;font-size:11.5px;margin-right:auto;margin-left:10px}
+.chead h4{margin:0}
+.chbar{position:absolute;left:12px;top:12px;display:flex;align-items:center;gap:8px;max-width:calc(100% - 24px);background:var(--panel);border:1px solid var(--accent);border-radius:3px;padding:4px 6px 4px 10px;box-shadow:0 2px 8px var(--shadow);z-index:2}
+.chbar b{font:600 12.5px var(--ui);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chbar .btn{height:24px;padding:0 8px;font-size:12px}
+.chl{display:grid;grid-template-columns:230px minmax(0,1fr);gap:14px;flex:1;min-height:0}
+.chlist{display:flex;flex-direction:column;gap:3px;overflow:auto;min-height:0}
+.chlist button{display:flex;justify-content:space-between;align-items:center;gap:8px;border:1px solid transparent;background:transparent;border-radius:3px;padding:6px 8px;cursor:pointer;text-align:left}
+.chlist button:hover{background:var(--accent-soft)}
+.chlist button[aria-pressed=true]{border-color:var(--accent);background:var(--accent-soft)}
+.chlist .lv{font:600 10px var(--ui);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.chlist .ok{color:var(--ok);font-weight:600}
+.chdet{overflow:auto;min-height:0;padding-right:6px}
+.chdet h4{margin:0 0 4px;font:600 17px var(--ui)}
+.chdet p{margin:6px 0;line-height:1.55;max-width:70ch}
+.chdet .tl{margin:12px 0 4px;font:600 10.5px var(--ui);letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.chdet .acts{margin:12px 0}
+.chdet .acts .btn{height:30px;font-size:13px}
+.chdet .hintbox{background:var(--accent-soft);border-radius:3px;padding:8px 10px}
+.chres{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.chres div{border:1px solid var(--line);border-left-width:4px;border-radius:3px;padding:6px 10px;font:12.5px var(--mono);overflow-wrap:anywhere}
+.chres .ok{border-left-color:var(--ok)}.chres .no{border-left-color:var(--err)}
+.chres small{display:block;color:var(--muted);font:11.5px var(--ui)}
+.chsum{font-weight:600;margin:8px 0 0}
+.chsum.ok{color:var(--ok)}
+.tracewrap{overflow:auto;min-height:0;border:1px solid var(--line);border-radius:3px}
+.tracewrap table{margin:0;width:max-content;min-width:100%}
+.tracewrap th,.tracewrap td{padding:4px 10px;white-space:nowrap;border-top:1px solid var(--line)}
+.tracewrap th{position:sticky;top:0;background:var(--panel);font-family:var(--mono);text-transform:none;letter-spacing:0;border-top:0;color:var(--ink)}
+.tracewrap td.ch{background:var(--accent-soft)}
+.tracewrap td:first-child{color:var(--muted)}
+.svgprev{background:var(--bg);border:1px solid var(--line);border-radius:3px;padding:8px;max-height:30vh;overflow:auto;text-align:center}
+.svgprev img{max-width:100%;height:auto}
+
+/* suggerimenti al passaggio del mouse */
+.modal{position:fixed;inset:0;z-index:40;background:rgba(5,10,20,.55);display:flex;align-items:center;justify-content:center;
+  padding-top:max(16px,env(safe-area-inset-top,0px));padding-bottom:max(16px,env(safe-area-inset-bottom,0px));
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.modal[hidden]{display:none}
+.sheet{background:var(--panel);border:1px solid var(--stroke);border-radius:4px;width:min(720px,100%);max-height:100%;display:flex;flex-direction:column;gap:10px;padding:14px;box-shadow:0 10px 40px var(--shadow)}
+.sheet.wide{width:min(1000px,100%);height:min(740px,100%)}
+.sheet header{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.sheet h3{margin:0;font:600 15px var(--ui)}
+.tabs,.stabs{display:flex;gap:4px;flex-wrap:wrap}
+.tab{border:1px solid var(--line);background:transparent;padding:3px 10px;border-radius:3px;cursor:pointer}
+.tab[aria-selected=true]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.sheet pre,.sheet textarea{margin:0;overflow:auto;background:var(--bg);border:1px solid var(--line);border-radius:3px;padding:10px;font:12.5px/1.5 var(--mono);min-height:200px;max-height:52vh;width:100%;resize:vertical}
+.sheet .foot{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between}
+.hint{color:var(--muted);font-size:12px}
+.spane{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column}
+.opt{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:12px 0;border-top:1px solid var(--line)}
+.opt:first-child{border-top:0}
+.opt p{margin:2px 0 0;color:var(--muted);font-size:12px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:3px;overflow:hidden;flex:none}
+.seg button{border:0;border-left:1px solid var(--line);background:transparent;padding:5px 12px;cursor:pointer}
+.seg button:first-child{border-left:0}
+.seg button[aria-pressed=true]{background:var(--accent);color:var(--accent-ink)}
+.opt input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent);flex:none}
+.about h2{margin:0 0 6px;font:600 20px var(--mono)}
+.about p{max-width:60ch}
+
+/* manuale */
+.manual{display:grid;grid-template-columns:210px minmax(0,1fr);gap:16px;flex:1;min-height:0}
+.mtoc{display:flex;flex-direction:column;gap:4px;overflow:auto;min-height:0}
+.mtoc input{width:100%;border:1px solid var(--line);background:var(--bg);border-radius:3px;padding:5px 8px;margin-bottom:4px}
+.mtoc button{border:0;background:transparent;text-align:left;padding:5px 8px;border-radius:3px;cursor:pointer;color:var(--muted)}
+.mtoc button:hover{background:var(--accent-soft);color:var(--ink)}
+.mtoc button[hidden]{display:none}
+.mbody{overflow:auto;min-height:0;padding-right:8px;scroll-behavior:smooth}
+.mbody section{padding-bottom:20px;max-width:78ch}
+.mbody h3{font:600 18px var(--ui);margin:0 0 8px;padding-top:2px;text-wrap:balance}
+.mbody h4{font:600 14px var(--mono);margin:14px 0 4px}
+.mbody p,.mbody li,.mbody dd{line-height:1.55}
+.mbody code{font-size:12px;background:var(--bg);border:1px solid var(--line);border-radius:2px;padding:0 4px}
+.mbody ol,.mbody ul{padding-left:20px}
+.mbody dt{font-weight:600;margin-top:10px}.mbody dd{margin:2px 0 0}
+.mt{margin:8px 0;font:12.5px var(--ui)}
+.mt th{padding:0 8px 4px 0}.mt td{padding:5px 8px 5px 0;vertical-align:top}
+.mt td:first-child{white-space:nowrap}
+.bman{border-top:1px solid var(--line);padding:4px 0 8px}
+.bman ul{margin:4px 0}
+.ex span,.mtip span{font:600 10.5px var(--ui);letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-right:6px}
+.mtip{color:var(--muted)}
+.nores{color:var(--muted)}
+
+/* pagina Codice */
+#codeview{display:flex;flex-direction:column;gap:10px;overflow:auto}
+.cvhead{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px}
+.cvhead h2{margin:0;font:600 17px var(--ui)}
+.cvhead .pn{color:var(--muted);font-family:var(--mono)}
+.cvhead label{display:flex;align-items:center;gap:6px;cursor:pointer}
+.cvhead input{accent-color:var(--accent)}
+.cvbody{display:grid;grid-template-columns:170px minmax(0,1fr);gap:10px;align-items:start}
+#cvLangs{display:flex;flex-direction:column;gap:3px;background:var(--panel);border:1px solid var(--line);border-radius:3px;padding:6px;position:sticky;top:0}
+.lg{display:flex;align-items:center;justify-content:space-between;gap:8px;border:1px solid transparent;background:transparent;border-radius:3px;padding:6px 8px;cursor:pointer;text-align:left}
+.lg:hover{background:var(--accent-soft)}
+.lg[aria-pressed=true]{background:var(--accent);color:var(--accent-ink)}
+.lg i{width:7px;height:7px;border-radius:50%;background:var(--ok);flex:none}
+.lg[aria-pressed=true] i{background:var(--accent-ink)}
+#cvMain{display:flex;flex-direction:column;gap:12px;min-width:0}
+.cc{background:var(--panel);border:1px solid var(--line);border-radius:3px;padding:12px;min-width:0;display:flex;flex-direction:column;gap:8px}
+.cc>header{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.cc h3{margin:0;font:600 16px var(--ui)}
+.cc .fn{color:var(--muted);font:12px var(--mono)}
+.cc .how{font-size:12.5px;overflow-wrap:anywhere}
+.cc .how code{background:var(--bg);border:1px solid var(--line);border-radius:2px;padding:1px 6px}
+.cc .badge{font-size:12px;color:var(--muted)}
+.cc .badge.ok{color:var(--ok)}
+.cc .nts{margin:0;padding-left:18px;color:var(--muted);font-size:12.5px}
+.cc .nts b{color:var(--ink)}
+pre.code{margin:0;padding:10px 0;background:var(--bg);border:1px solid var(--line);border-radius:3px;overflow:auto;font:12.5px/1.55 var(--mono);counter-reset:ln;max-height:none;tab-size:4}
+pre.code code{display:block;width:max-content;min-width:100%}
+.l{display:block;white-space:pre;padding:0 14px 0 3.6em;position:relative;min-height:1.55em}
+.l::before{counter-increment:ln;content:counter(ln);position:absolute;left:0;width:2.6em;text-align:right;color:var(--hc);opacity:.7}
+.k{color:var(--hk);font-weight:500}.s{color:var(--hs)}.n{color:var(--hn)}.c{color:var(--hc);font-style:italic}.pp{color:var(--hc)}
+.empty{color:var(--muted);padding:20px 0}
+
+@media (max-width:900px){
+  html,body{height:auto}
+  body{display:block}
+  .top{margin-bottom:10px}
+  #views{display:block}
+  .work{display:flex;flex-direction:column}
+  .stencil{flex-direction:row;flex-wrap:nowrap;align-items:center;overflow-x:auto}
+  .stencil h4,.stencil p{display:none}
+  .blk{width:auto;flex:none}
+  .boardwrap{height:64vh;min-height:380px;flex:none}
+  .side{display:block}.side .card{margin-bottom:10px}
+  #props,#vars{max-height:none}#cons{min-height:240px}
+  #pname{width:140px}
+  .manual{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr)}
+  .mtoc{flex-direction:row;flex-wrap:nowrap;overflow-x:auto;align-items:center}
+  .mtoc input{width:150px;flex:none;margin:0}.mtoc button{flex:none;white-space:nowrap}
+  .cvbody{grid-template-columns:minmax(0,1fr)}
+  #cvLangs{flex-direction:row;overflow-x:auto;position:static}
+  .lg{flex:none}
+  .opt{flex-wrap:wrap}
+  .chl{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr)}
+  .chlist{flex-direction:row;overflow-x:auto}.chlist button{flex:none}
+}
+@media (prefers-reduced-motion:reduce){.chg td{animation:none}.slot .dot{transition:none}.mbody{scroll-behavior:auto}}
+</style>
+
+<header class="top">
+  <div class="brand"><svg viewBox="0 0 24 24"><rect x="8" y="2" width="8" height="5" rx="2.5"/><path d="M12 7v3M12 10l-5 4 5 4 5-4z"/><path d="M12 18v3"/></svg><span class="bn">EDU<b>FLOW</b></span></div>
+  <input id="pname" class="ed" type="text" data-i18n-aria="ui.progName" maxlength="60" spellcheck="false">
+  <div class="grp ed">
+    <select id="examples" class="btn" data-tip="ui:examples" data-i18n-aria="ui.examples"></select>
+    <button class="btn icon" id="undo" data-tip="ui:undo" data-i18n-aria="ui.undo"><svg viewBox="0 0 16 16"><path d="M6 3 2 7l4 4V8c3 0 5 1 6 4 0-4-2-7-6-7z"/></svg></button>
+    <button class="btn icon" id="redo" data-tip="ui:redo" data-i18n-aria="ui.redo"><svg viewBox="0 0 16 16"><path d="m10 3 4 4-4 4V8c-3 0-5 1-6 4 0-4 2-7 6-7z"/></svg></button>
+  </div>
+  <div class="sep ed"></div>
+  <div class="grp ed">
+    <button class="btn primary" id="bRun" data-tip="ui:run"><svg viewBox="0 0 16 16"><path d="M4 2.5v11l9-5.5z"/></svg><span data-i18n="ui.run"></span></button>
+    <button class="btn" id="bStep" data-tip="ui:step"><svg viewBox="0 0 16 16"><path d="M2 3v10l7-5zM11 3h3v10h-3z"/></svg><span data-i18n="ui.step"></span></button>
+    <button class="btn" id="bPause" data-tip="ui:pause" disabled><svg viewBox="0 0 16 16"><path d="M3 2h4v12H3zM9 2h4v12H9z"/></svg><span data-i18n="ui.pause"></span></button>
+    <button class="btn" id="bStop" data-tip="ui:stop" disabled><svg viewBox="0 0 16 16"><path d="M3 3h10v10H3z"/></svg><span data-i18n="ui.stop"></span></button>
+    <label class="speed" data-tip="ui:speed"><span data-i18n="ui.speed"></span> <input type="range" id="speed" min="0" max="4" value="1" data-i18n-aria="ui.speed"><span id="speedL"></span></label>
+  </div>
+  <div class="grow"></div>
+  <div class="grp">
+    <button class="btn" id="bChal" data-tip="ui:challenges"><svg class="st" viewBox="0 0 16 16"><path d="M8 1.8l1.9 3.9 4.3.6-3.1 3 .7 4.3L8 11.6l-3.8 2 .7-4.3-3.1-3 4.3-.6z"/></svg><span data-i18n="ui.challenges"></span></button>
+    <button class="btn" id="bCode" data-tip="ui:code"><svg class="st" viewBox="0 0 16 16"><path d="m5.5 4-4 4 4 4M10.5 4l4 4-4 4"/></svg><span data-i18n="ui.code"></span></button>
+    <button class="btn ed" id="bExport" data-tip="ui:export" data-i18n="ui.export"></button>
+    <button class="btn ed" id="bImport" data-tip="ui:import" data-i18n="ui.import"></button>
+    <button class="btn ed" id="bNew" data-tip="ui:new" data-i18n="ui.new"></button>
+    <a class="btn coffee" id="bCoffee" data-tip="ui:coffee" target="_blank" rel="noopener" hidden><svg class="st" viewBox="0 0 16 16"><path d="M2.5 6h8v3.5a3.5 3.5 0 0 1-3.5 3.5h-1A3.5 3.5 0 0 1 2.5 9.5zM10.5 7h1.2a1.8 1.8 0 0 1 0 3.6h-1.2M5 1.5v2M7.5 1.5v2"/></svg><span data-i18n="ui.coffee"></span></a>
+    <button class="btn" id="bSettings" data-tip="ui:settings"><svg class="st" viewBox="0 0 16 16"><circle cx="8" cy="8" r="2.2"/><path d="M8 1.5v2M8 12.5v2M1.5 8h2M12.5 8h2M3.4 3.4l1.4 1.4M11.2 11.2l1.4 1.4M3.4 12.6l1.4-1.4M11.2 4.8l1.4-1.4"/></svg><span data-i18n="ui.settings"></span></button>
+  </div>
+</header>
+
+<div id="views">
+  <main class="work" id="workview">
+    <nav class="stencil" id="stencil"></nav>
+    <section class="boardwrap">
+      <div class="board" id="board"><div id="host"></div></div>
+      <div class="chbar" id="chbar" hidden></div>
+      <div class="zoom">
+        <button class="btn icon" id="zOut" data-tip="ui:zoom" data-i18n-aria="ui.zoomOut">−</button>
+        <button class="btn z" id="zReset" data-tip="ui:zoom" data-i18n-aria="ui.zoomReset">100%</button>
+        <button class="btn icon" id="zIn" data-tip="ui:zoom" data-i18n-aria="ui.zoomIn">+</button>
+        <button class="btn" id="zFit" data-tip="ui:fit" data-i18n="ui.fit"></button>
+      </div>
+    </section>
+    <aside class="side">
+      <section class="card" id="props"></section>
+      <section class="card" id="vars"></section>
+      <section class="card" id="watchCard"><div class="chead" data-tip="ui:watch"><h4 data-i18n="ui.watch"></h4><span id="watchOut" class="wout"></span></div><input id="watchIn" type="text" data-i18n-ph="ui.watchPh" data-i18n-aria="ui.watch" spellcheck="false" autocomplete="off"></section>
+      <section class="card" id="cons">
+        <div class="chead"><h4 data-i18n="ui.console"></h4><button class="btn sm" id="bTrace" data-tip="ui:trace" data-i18n="ui.trace"></button><span id="status"></span></div>
+        <pre id="con" aria-live="polite"></pre>
+        <form id="inform" hidden><label id="inprompt" for="inval"></label><input id="inval" type="text" autocomplete="off" spellcheck="false"><button class="btn primary" type="submit" data-i18n="ui.send"></button></form>
+      </section>
+    </aside>
+  </main>
+
+  <section id="codeview" hidden>
+    <div class="cvhead">
+      <button class="btn" id="cvBack"><svg class="st" viewBox="0 0 16 16"><path d="M10 3 5 8l5 5"/></svg><span data-i18n="ui.cvBack"></span></button>
+      <h2 data-i18n="ui.cvTitle"></h2>
+      <span class="pn" id="cvProg"></span>
+      <div class="grow"></div>
+      <label><input type="checkbox" id="cvAllChk"><span data-i18n="ui.cvAll"></span></label>
+    </div>
+    <div class="cvbody">
+      <nav id="cvLangs" aria-label="Languages"></nav>
+      <div id="cvMain"></div>
+    </div>
+  </section>
+</div>
+
+<div class="tip" id="tip" role="tooltip" hidden></div>
+<div class="menu" id="menu" hidden></div>
+<div class="modal" id="modal" hidden><div class="sheet" id="sheet" role="dialog" aria-modal="true"></div></div>
+<script>
+'use strict';
+
+/* ---------- impostazioni e lingua ---------- */
+const SUP=['it','en'];
+const SETK='flussi.settings';
+let SET={lang:null,theme:'auto',tips:true,grid:true,speed:1,done:[],active:null,watch:''};
+try{Object.assign(SET,JSON.parse(localStorage.getItem(SETK)||'{}'))}catch(e){}
+let LANG=SUP.includes(SET.lang)?SET.lang:((typeof navigator!=='undefined'&&String(navigator.language||'').toLowerCase().startsWith('it'))?'it':'en');
+const M=(it,en)=>LANG==='it'?it:en;
+function saveSet(){try{localStorage.setItem(SETK,JSON.stringify(SET))}catch(e){}}
+function tget(o,k){return k.split('.').reduce((a,p)=>a==null?a:a[p],o)}
+function t(k,...a){
+  let v=tget(TXT[LANG],k);
+  if(v===undefined)v=tget(TXT.en,k);
+  if(typeof v==='function')return v(...a);
+  return v===undefined?k:v;
+}
+const BN={declare:'Declare',assign:'Assign',input:'Input',output:'Output',if:'If',while:'While',for:'For',do:'Do While',comment:'Comment'};
+const ORDER=['declare','assign','input','output','if','while','for','do','comment'];
+const TYPES=['Integer','Real','String','Boolean'];
+const OLDTYPES={Intero:'Integer',Reale:'Real',Stringa:'String',Booleano:'Boolean'};
+const tl=ty=>t('types.'+ty);
+
+/* funzioni disponibili: nome, firma, descrizione it, descrizione en, esempio */
+const FUNCS=[
+ ['sqrt','sqrt(x)','Radice quadrata','Square root','sqrt(16) → 4'],
+ ['abs','abs(x)','Valore assoluto','Absolute value','abs(-3) → 3'],
+ ['sin','sin(x)','Seno (x in radianti)','Sine (x in radians)','sin(0) → 0'],
+ ['cos','cos(x)','Coseno (x in radianti)','Cosine (x in radians)','cos(0) → 1'],
+ ['tan','tan(x)','Tangente (x in radianti)','Tangent (x in radians)','tan(0) → 0'],
+ ['log','log(x)','Logaritmo naturale','Natural logarithm','log(1) → 0'],
+ ['log10','log10(x)','Logaritmo in base 10','Base-10 logarithm','log10(1000) → 3'],
+ ['exp','exp(x)','e elevato a x','e raised to x','exp(0) → 1'],
+ ['floor','floor(x)','Arrotonda per difetto','Round down','floor(2.9) → 2'],
+ ['ceil','ceil(x)','Arrotonda per eccesso','Round up','ceil(2.1) → 3'],
+ ['round','round(x)','Arrotonda al più vicino','Round to nearest','round(2.5) → 3'],
+ ['int','int(x)','Parte intera (toglie i decimali)','Integer part (drops decimals)','int(-2.7) → -2'],
+ ['sign','sign(x)','Segno: -1, 0 oppure 1','Sign: -1, 0 or 1','sign(-8) → -1'],
+ ['pow','pow(x, y)','x elevato a y (come x ^ y)','x raised to y (same as x ^ y)','pow(2, 10) → 1024'],
+ ['min','min(a, b)','Il minore fra due numeri','The smaller of two numbers','min(4, 9) → 4'],
+ ['max','max(a, b)','Il maggiore fra due numeri','The larger of two numbers','max(4, 9) → 9'],
+ ['random','random(n)','Intero casuale da 0 a n-1','Random integer from 0 to n-1','random(6) + 1 → 1…6'],
+ ['len','len(s)','Lunghezza di un testo o di un array','Length of a text or an array','len("ciao") → 4'],
+ ['upper','upper(s)','Testo in maiuscolo','Text in upper case','upper("ok") → "OK"'],
+ ['lower','lower(s)','Testo in minuscolo','Text in lower case','lower("OK") → "ok"'],
+ ['substr','substr(s, start, count)','Estrae count caratteri da start (si parte da 0)','Takes count characters from start (counting from 0)','substr("flusso", 0, 4) → "flus"'],
+ ['str','str(x)','Converte un valore in testo','Converts a value to text','str(42) → "42"'],
+ ['num','num(s)','Converte un testo in numero','Converts a text to a number','num("3.5") → 3.5'],
+];
+
+const TXT={it:{},en:{}};
+
+/* =============================== ITALIANO =============================== */
+TXT.it={
+ types:{Integer:'Intero',Real:'Reale',String:'Stringa',Boolean:'Booleano'},
+ ui:{
+  start:'Inizio',end:'Fine',yes:'Sì',no:'No',
+  run:'Esegui',cont:'Continua',step:'Passo',pause:'Pausa',stop:'Stop',speed:'Velocità',
+  speedN:['Lenta','Media','Veloce','Molto veloce','Massima'],
+  code:'Codice',export:'Esporta',import:'Importa',new:'Nuovo',settings:'Impostazioni',
+  examples:'Esempi…',undo:'Annulla',redo:'Ripeti',progName:'Nome del programma',
+  blocks:'Blocchi',stencilHint:'Aggiunge dopo il blocco selezionato, oppure clicca un punto + sul diagramma.',
+  zoomIn:'Ingrandisci',zoomOut:'Riduci',zoomReset:'Zoom al 100%',fit:'Adatta',
+  vars:'Variabili',varsEmpty:'I valori compaiono qui durante l\'esecuzione.',name:'Nome',type:'Tipo',value:'Valore',
+  console:'Console',ready:'Pronto',running:'In esecuzione',paused:'In pausa',waiting:'In attesa di un valore',
+  finished:(s,ms)=>`Terminato · ${s} passi · ${ms} ms`,stopped:'Interrotto',error:'Errore',emptyDiagram:'Il diagramma è vuoto',
+  endLine:'— Programma terminato —',stopLine:'— Interrotto —',errPrefix:'Errore: ',internalErr:'Errore interno: ',enter:'Inserisci ',send:'Invio',
+  close:'Chiudi',copy:'Copia',copied:'Copiato',copyManual:'Seleziona e copia a mano',
+  stepWord:'passo',up:'Su',down:'Giù',dup:'Duplica',del:'Elimina',
+  helpTitle:'Come si usa',
+  help1:'Aggiungi blocchi dal pannello a sinistra o con i punti + sul diagramma. Seleziona un blocco per modificarlo, poi premi Esegui o Passo.',
+  help2:'Passa il mouse su un blocco o su un pulsante per leggere cosa fa.',
+  openManual:'Apri il manuale',
+  exportTitle:'Esporta il programma',exportHint:'Copia il testo e conservalo. Incollalo in Importa per riaprire il diagramma.',
+  importTitle:'Importa un programma',importPh:'Incolla qui il testo esportato da EDUFLOW',importErr:'Formato non riconosciuto: serve il testo esportato da EDUFLOW.',
+  chooseFile:'Scegli un file',importBtn:'Importa',
+  newTitle:'Nuovo programma',newText:'Il diagramma attuale verrà sostituito. Puoi recuperarlo subito con Annulla.',newBtn:'Svuota il diagramma',
+  untitled:'Senza titolo',
+  tabSettings:'Impostazioni',tabManual:'Manuale',tabAbout:'Informazioni',
+  language:'Lingua',languageD:'Cambia la lingua dell\'interfaccia, del manuale e dei messaggi.',
+  theme:'Tema',themeD:'Segue il dispositivo oppure resta sempre chiaro o scuro.',themeAuto:'Automatico',themeLight:'Chiaro',themeDark:'Scuro',
+  tips:'Spiegazioni al passaggio del mouse',tipsD:'Mostra una descrizione dettagliata di blocchi e pulsanti.',
+  grid:'Griglia sul diagramma',gridD:'Mostra i puntini di sfondo.',
+  defSpeed:'Velocità iniziale',defSpeedD:'Velocità di esecuzione all\'apertura.',
+  reset:'Ripristina le impostazioni',resetD:'Torna ai valori predefiniti.',
+  search:'Cerca nel manuale…',noResults:'Nessun risultato',
+  aboutTitle:'EDUFLOW',aboutText:'Un editor di diagrammi di flusso che si può eseguire: costruisci l\'algoritmo con i blocchi, osservalo passo dopo passo, mettiti alla prova con le sfide e ottieni il codice in 11 linguaggi.',
+  aboutPriv:'Tutto avviene nel tuo browser. Il programma si salva da solo in questo browser e non viene inviato da nessuna parte.',
+  cvBack:'Diagramma',cvTitle:'Codice generato',cvAll:'Mostra tutti i linguaggi',cvHow:'Come eseguirlo',cvNotes:'Cosa controllare',
+  cvEmpty:'Il diagramma è vuoto: aggiungi dei blocchi per vedere il codice.',cvNote:'Traduzione diretta del diagramma. Controlla i tipi e i formati di stampa prima di usarla altrove.',
+  cvTested:'Provato con questo compilatore o interprete',cvUntested:'Generato secondo le regole del linguaggio, non ancora provato',
+  lines:n=>n+(n===1?' riga':' righe'),
+  bp:'Punto di interruzione',bpHelp:'Ferma l\'esecuzione prima di questo blocco',watch:'Osserva',watchPh:'Espressione, es. sum * 2',resetCh:'Azzera i progressi delle sfide',resetChD:'Cancella le sfide segnate come completate.',
+  coffee:'Offrimi un caffè',aboutCoffee:'Se EDUFLOW ti è utile, puoi offrirmi un caffè: è un modo per ringraziare e per sostenere nuove funzioni.',
+  challenges:'Sfide',chIntro:'Risolvi gli esercizi costruendo il diagramma. Il controllo prova il tuo programma con più valori e confronta ciò che scrive con il risultato atteso.',
+  chDone:(a,b)=>a+' di '+b+' completate',chLevel:['Facile','Medio','Difficile'],chGoal:'Obiettivo',chTry:'Esempi di prova',chIn:'Input',chOut:'Output atteso',
+  chStart:'Inizia',chCheck:'Controlla la mia soluzione',chHint:'Suggerimento',chSol:'Mostra una soluzione',chPass:'Superato',chFail:'Non ancora',
+  chAllOk:'Tutti i controlli superati. Bravo!',chSomeFail:(a,b)=>a+' controlli su '+b+' superati.',chGot:'Il tuo programma scrive',chWant:'Atteso',chErr:'Errore',
+  chNoInput:'Il programma chiede più valori del previsto',chEmpty:'Costruisci prima il diagramma, poi controlla.',chSolNote:'Questa soluzione ha sostituito il diagramma. Puoi annullare.',
+  chActive:'Sfida',chClose:'Chiudi la sfida',chNone:'(niente)',chLoops:'Troppi passi: il programma sembra non finire',
+  trace:'Traccia',traceTitle:'Tabella di traccia',traceHint:'Il valore delle variabili dopo ogni blocco eseguito. Le celle evidenziate sono quelle appena cambiate.',traceStepH:'Passo',traceBlock:'Blocco',
+  traceEmpty:'Esegui il programma per vedere la traccia.',traceCut:n=>'Mostrate solo le prime '+n+' righe.',
+  expText:'Testo del programma',expSvg:'Immagine SVG',svgHint:'Copia il testo SVG e salvalo in un file .svg, oppure incollalo in un documento o in una presentazione.',
+ },
+ fld:{
+  vt:'Tipo',name:'Nome',size:'Dimensione array (vuoto per una variabile singola)',
+  target:'Variabile',expr:'Valore',prompt:'Messaggio mostrato (facoltativo)',inVar:'Variabile che riceve il valore',
+  outExpr:'Cosa scrivere',nl:'Vai a capo dopo',cond:'Condizione',wcond:'Ripeti finché la condizione è vera',
+  v:'Variabile',from:'Da',to:'A',step:'Passo',text:'Testo',
+  ph:{name:'es. somma',size:'es. 10',target:'x oppure v[i]',expr:'es. x + 1',outExpr:'es. "Totale: " & somma',cond:'es. x > 0 and x < 10',step:'1 oppure -1'},
+ },
+ tip:{
+  tags:{desc:'Cosa fa',fields:'Campi',example:'Esempio',tip:'Consiglio',shortcut:'Scorciatoia'},
+  run:{t:'Esegui',d:'Avvia il programma dall\'inizio e lo esegue fino alla fine alla velocità scelta. Se è in pausa, riprende da dove si era fermato.',k:'Ctrl+Invio'},
+  step:{t:'Passo',d:'Esegue un solo blocco alla volta e poi si ferma. Serve per seguire l\'algoritmo con calma e vedere come cambiano le variabili.',k:'F10'},
+  pause:{t:'Pausa',d:'Sospende l\'esecuzione dopo il blocco corrente. Poi puoi continuare con Esegui oppure avanzare con Passo.'},
+  stop:{t:'Stop',d:'Interrompe subito il programma. Il diagramma torna modificabile.'},
+  speed:{t:'Velocità',d:'Quanto aspetta il programma fra un blocco e l\'altro. Alla velocità massima esegue tutto il più in fretta possibile.'},
+  undo:{t:'Annulla',d:'Torna alla modifica precedente del diagramma.',k:'Ctrl+Z'},
+  redo:{t:'Ripeti',d:'Rimette la modifica che hai appena annullato.',k:'Ctrl+Y'},
+  code:{t:'Codice',d:'Apre una pagina che mostra il programma tradotto in JavaScript, Python, Java, C, C++, C#, Go, PHP, Ruby, Kotlin e Swift.'},
+  export:{t:'Esporta',d:'Mostra il programma come testo da copiare e conservare, per riaprirlo più tardi o passarlo a qualcun altro.'},
+  import:{t:'Importa',d:'Riapre un programma partendo dal testo esportato, incollato o caricato da file.'},
+  new:{t:'Nuovo',d:'Svuota il diagramma per ricominciare. Puoi tornare indietro con Annulla.'},
+  settings:{t:'Impostazioni e manuale',d:'Cambia lingua e tema, e apre il manuale completo con tutte le spiegazioni.'},
+  examples:{t:'Esempi',d:'Carica un programma già pronto da studiare, eseguire e modificare.'},
+  fit:{t:'Adatta',d:'Regola lo zoom perché il diagramma intero entri nella finestra.'},
+  zoom:{t:'Zoom',d:'Ingrandisce o riduce il diagramma. Con Ctrl e rotella del mouse puoi fare lo stesso.'},
+  slot:{t:'Punto di inserimento',d:'Clicca per scegliere il blocco da inserire proprio qui.'},
+  bp:{t:'Punto di interruzione',d:'Il programma si mette in pausa ogni volta che sta per eseguire questo blocco. Poi usa Passo o Continua.',k:'F9'},
+  watch:{t:'Osserva',d:'Scrivi un\'espressione: il suo valore viene ricalcolato a ogni blocco durante l\'esecuzione.'},
+  coffee:{t:'Offrimi un caffè',d:'Apre la pagina per offrirmi un caffè. Non è obbligatorio: EDUFLOW resta gratuito.'},
+  challenges:{t:'Sfide',d:'Esercizi guidati con controllo automatico: costruisci il diagramma e verifica se funziona con più valori di prova.'},
+  trace:{t:'Tabella di traccia',d:'Mostra una tabella con il valore di ogni variabile dopo ciascun blocco dell\'ultima esecuzione. Utile per capire e per i compiti.'},
+ },
+ blk:{
+  declare:{short:'Crea una variabile (o un array) con un tipo.',
+   long:'Prima di usare una variabile devi dichiararla. Scegli il tipo e il nome; indica una dimensione per creare un array. All\'inizio vale 0, testo vuoto o falso.',
+   fields:[['Tipo','Integer (numeri interi), Real (decimali), String (testo) o Boolean (vero/falso).'],['Nome','Lettere, cifre e _, senza iniziare con una cifra. Maiuscole e minuscole contano.'],['Dimensione','Lascia vuoto per una variabile singola. Un numero o un\'espressione crea un array.']],
+   example:'Integer total   ·   Integer v[10]',tip:'Total e total sono due variabili diverse.'},
+  assign:{short:'Calcola un valore e lo memorizza in una variabile.',
+   long:'Valuta l\'espressione a destra e salva il risultato nella variabile a sinistra. Il risultato deve avere il tipo della variabile. Un numero con decimali assegnato a un Integer viene troncato.',
+   fields:[['Variabile','x oppure v[i] per un elemento di un array.'],['Valore','Qualsiasi espressione: numeri, variabili, operatori, funzioni.']],
+   example:'total = total + price * 2',tip:'Si legge «metti nella variabile il valore di…», non è un confronto.'},
+  input:{short:'Legge un valore scritto dall\'utente.',
+   long:'Ferma il programma e mostra un campo nella console. Il testo scritto viene convertito nel tipo della variabile. Se non è valido, il valore viene chiesto di nuovo.',
+   fields:[['Variabile','Dove viene salvato il valore. Deve essere già dichiarata.'],['Messaggio','Testo mostrato prima del campo (facoltativo).']],
+   example:'Input age   (messaggio: Quanti anni hai?)',tip:'Per un Real puoi usare sia il punto sia la virgola.'},
+  output:{short:'Scrive un valore nella console.',
+   long:'Calcola l\'espressione e ne mostra il risultato. Con «Vai a capo dopo» attivo, il prossimo Output parte da una nuova riga. Usa & per unire testi e numeri.',
+   fields:[['Cosa scrivere','Un\'espressione: testo fra virgolette, numeri, variabili.'],['Vai a capo dopo','Se disattivato, l\'Output successivo continua sulla stessa riga.']],
+   example:'Output "Totale: " & total',tip:'Disattiva «Vai a capo» per stampare più valori sulla stessa riga dentro un ciclo.'},
+  if:{short:'Sceglie fra due percorsi in base a una condizione.',
+   long:'Se la condizione è vera il programma segue il ramo Sì, altrimenti il ramo No, che può restare vuoto. Poi i due rami si ricongiungono.',
+   fields:[['Condizione','Un\'espressione che dà vero o falso, per esempio x > 0 oppure nome == "Anna".']],
+   example:'x > 0 and x < 10',tip:'Per più scelte inserisci un altro If dentro il ramo No.'},
+  while:{short:'Ripete i blocchi interni finché la condizione è vera.',
+   long:'Controlla la condizione prima di ogni giro. Se è falsa fin dall\'inizio, il corpo non viene mai eseguito. Dentro il ciclo deve cambiare qualcosa, altrimenti non finisce mai.',
+   fields:[['Condizione','Il ciclo continua finché è vera.']],
+   example:'n > 0',tip:'Usa While quando non sai in anticipo quante volte ripetere.'},
+  for:{short:'Ripete i blocchi interni contando da un valore a un altro.',
+   long:'La variabile parte da From e arriva a To, estremo incluso, cambiando di Step a ogni giro. Con un passo negativo conta all\'indietro. Se la variabile non esiste viene creata.',
+   fields:[['Variabile','Il contatore, per esempio i.'],['Da','Valore iniziale.'],['A','Valore finale, incluso.'],['Passo','Di quanto cambia a ogni giro. Vuoto o 1 per contare in avanti, -1 per contare all\'indietro.']],
+   example:'i: 1 → 10, passo 2',tip:'Usa For quando sai già quante volte ripetere.'},
+  do:{short:'Esegue il corpo almeno una volta, poi controlla la condizione.',
+   long:'A differenza di While, la condizione viene controllata dopo il corpo: il blocco gira sempre almeno una volta e ripete finché la condizione è vera. Va bene per chiedere un dato finché non è valido.',
+   fields:[['Condizione','Il ciclo ripete finché è vera. Il controllo si trova in fondo.']],
+   example:'answer != "q"',tip:'Il ramo «Sì» torna all\'inizio, il ramo «No» esce dal ciclo.'},
+  comment:{short:'Una nota per chi legge. Non viene eseguita.',
+   long:'Serve a spiegare un passaggio. Nel codice generato diventa un commento.',
+   fields:[['Testo','La nota, anche su più righe.']],
+   example:'Calcola la media',tip:'Un buon commento spiega perché, non ripete cosa fa il blocco.'},
+ },
+ msg:{
+  wrongNode:'Questo blocco ha un errore: ',
+ },
+};
+
+/* =============================== ENGLISH =============================== */
+TXT.en={
+ types:{Integer:'Integer',Real:'Real',String:'String',Boolean:'Boolean'},
+ ui:{
+  start:'Start',end:'End',yes:'Yes',no:'No',
+  run:'Run',cont:'Continue',step:'Step',pause:'Pause',stop:'Stop',speed:'Speed',
+  speedN:['Slow','Medium','Fast','Very fast','Maximum'],
+  code:'Code',export:'Export',import:'Import',new:'New',settings:'Settings',
+  examples:'Examples…',undo:'Undo',redo:'Redo',progName:'Program name',
+  blocks:'Blocks',stencilHint:'Adds after the selected block, or click a + dot on the diagram.',
+  zoomIn:'Zoom in',zoomOut:'Zoom out',zoomReset:'Zoom to 100%',fit:'Fit',
+  vars:'Variables',varsEmpty:'Values appear here while the program runs.',name:'Name',type:'Type',value:'Value',
+  console:'Console',ready:'Ready',running:'Running',paused:'Paused',waiting:'Waiting for input',
+  finished:(s,ms)=>`Finished · ${s} steps · ${ms} ms`,stopped:'Stopped',error:'Error',emptyDiagram:'The diagram is empty',
+  endLine:'— Program finished —',stopLine:'— Stopped —',errPrefix:'Error: ',internalErr:'Internal error: ',enter:'Enter ',send:'Send',
+  close:'Close',copy:'Copy',copied:'Copied',copyManual:'Select and copy by hand',
+  stepWord:'step',up:'Up',down:'Down',dup:'Duplicate',del:'Delete',
+  helpTitle:'How it works',
+  help1:'Add blocks from the left panel or with the + dots on the diagram. Select a block to edit it, then press Run or Step.',
+  help2:'Hover over a block or a button to read what it does.',
+  openManual:'Open the manual',
+  exportTitle:'Export the program',exportHint:'Copy the text and keep it. Paste it into Import to reopen the diagram.',
+  importTitle:'Import a program',importPh:'Paste the text exported from EDUFLOW here',importErr:'Unrecognized format: paste the text exported from EDUFLOW.',
+  chooseFile:'Choose a file',importBtn:'Import',
+  newTitle:'New program',newText:'The current diagram will be replaced. You can get it back right away with Undo.',newBtn:'Clear the diagram',
+  untitled:'Untitled',
+  tabSettings:'Settings',tabManual:'Manual',tabAbout:'About',
+  language:'Language',languageD:'Changes the language of the interface, the manual and the messages.',
+  theme:'Theme',themeD:'Follow the device, or stay light or dark.',themeAuto:'Automatic',themeLight:'Light',themeDark:'Dark',
+  tips:'Hover explanations',tipsD:'Shows a detailed description of blocks and buttons.',
+  grid:'Diagram grid',gridD:'Shows the dotted background.',
+  defSpeed:'Starting speed',defSpeedD:'Execution speed when the app opens.',
+  reset:'Reset settings',resetD:'Go back to the default values.',
+  search:'Search the manual…',noResults:'No results',
+  aboutTitle:'EDUFLOW',aboutText:'A flowchart editor you can run: build the algorithm with blocks, watch it step by step, test yourself with challenges and get the code in 11 languages.',
+  aboutPriv:'Everything happens in your browser. The program is saved automatically in this browser and is not sent anywhere.',
+  cvBack:'Diagram',cvTitle:'Generated code',cvAll:'Show all languages',cvHow:'How to run it',cvNotes:'Things to check',
+  cvEmpty:'The diagram is empty: add some blocks to see the code.',cvNote:'A direct translation of the diagram. Check types and print formats before using it elsewhere.',
+  cvTested:'Tested with this compiler or interpreter',cvUntested:'Generated from the language rules, not tested yet',
+  lines:n=>n+(n===1?' line':' lines'),
+  bp:'Breakpoint',bpHelp:'Pauses the run before this block',watch:'Watch',watchPh:'Expression, e.g. sum * 2',resetCh:'Reset challenge progress',resetChD:'Clears the challenges marked as completed.',
+  coffee:'Buy me a coffee',aboutCoffee:'If EDUFLOW is useful to you, you can buy me a coffee: a way to say thanks and to support new features.',
+  challenges:'Challenges',chIntro:'Solve the exercises by building the diagram. The check runs your program with several values and compares what it writes with the expected result.',
+  chDone:(a,b)=>a+' of '+b+' completed',chLevel:['Easy','Medium','Hard'],chGoal:'Goal',chTry:'Sample cases',chIn:'Input',chOut:'Expected output',
+  chStart:'Start',chCheck:'Check my solution',chHint:'Hint',chSol:'Show a solution',chPass:'Passed',chFail:'Not yet',
+  chAllOk:'All checks passed. Well done!',chSomeFail:(a,b)=>a+' of '+b+' checks passed.',chGot:'Your program writes',chWant:'Expected',chErr:'Error',
+  chNoInput:'The program asks for more values than expected',chEmpty:'Build the diagram first, then check.',chSolNote:'This solution replaced the diagram. You can undo.',
+  chActive:'Challenge',chClose:'Close the challenge',chNone:'(nothing)',chLoops:'Too many steps: the program seems to never end',
+  trace:'Trace',traceTitle:'Trace table',traceHint:'The value of the variables after each block that ran. Highlighted cells just changed.',traceStepH:'Step',traceBlock:'Block',
+  traceEmpty:'Run the program to see the trace.',traceCut:n=>'Showing only the first '+n+' rows.',
+  expText:'Program text',expSvg:'SVG image',svgHint:'Copy the SVG text and save it as an .svg file, or paste it into a document or a presentation.',
+ },
+ fld:{
+  vt:'Type',name:'Name',size:'Array size (leave empty for a single variable)',
+  target:'Variable',expr:'Value',prompt:'Message shown (optional)',inVar:'Variable that receives the value',
+  outExpr:'What to write',nl:'New line after',cond:'Condition',wcond:'Repeat while the condition is true',
+  v:'Variable',from:'From',to:'To',step:'Step',text:'Text',
+  ph:{name:'e.g. total',size:'e.g. 10',target:'x or v[i]',expr:'e.g. x + 1',outExpr:'e.g. "Total: " & total',cond:'e.g. x > 0 and x < 10',step:'1 or -1'},
+ },
+ tip:{
+  tags:{desc:'What it does',fields:'Fields',example:'Example',tip:'Tip',shortcut:'Shortcut'},
+  run:{t:'Run',d:'Starts the program from the beginning and runs it to the end at the chosen speed. If it is paused, it resumes where it stopped.',k:'Ctrl+Enter'},
+  step:{t:'Step',d:'Runs one block at a time and then waits. Use it to follow the algorithm slowly and see how the variables change.',k:'F10'},
+  pause:{t:'Pause',d:'Suspends execution after the current block. Then continue with Run or advance with Step.'},
+  stop:{t:'Stop',d:'Stops the program right away. The diagram becomes editable again.'},
+  speed:{t:'Speed',d:'How long the program waits between one block and the next. At maximum speed it runs as fast as it can.'},
+  undo:{t:'Undo',d:'Goes back to the previous change of the diagram.',k:'Ctrl+Z'},
+  redo:{t:'Redo',d:'Puts back the change you just undid.',k:'Ctrl+Y'},
+  code:{t:'Code',d:'Opens a page that shows the program translated to JavaScript, Python, Java, C, C++, C#, Go, PHP, Ruby, Kotlin and Swift.'},
+  export:{t:'Export',d:'Shows the program as text you can copy and keep, to reopen it later or hand it to someone else.'},
+  import:{t:'Import',d:'Reopens a program from exported text, pasted or loaded from a file.'},
+  new:{t:'New',d:'Clears the diagram to start over. You can go back with Undo.'},
+  settings:{t:'Settings and manual',d:'Changes language and theme, and opens the full manual with every explanation.'},
+  examples:{t:'Examples',d:'Loads a ready-made program to study, run and edit.'},
+  fit:{t:'Fit',d:'Adjusts the zoom so the whole diagram fits in the window.'},
+  zoom:{t:'Zoom',d:'Enlarges or reduces the diagram. Ctrl and the mouse wheel do the same.'},
+  slot:{t:'Insertion point',d:'Click to choose the block to insert right here.'},
+  bp:{t:'Breakpoint',d:'The program pauses every time it is about to run this block. Then use Step or Continue.',k:'F9'},
+  watch:{t:'Watch',d:'Type an expression: its value is recomputed at every block while the program runs.'},
+  coffee:{t:'Buy me a coffee',d:'Opens the page to buy me a coffee. It is optional: EDUFLOW stays free.'},
+  challenges:{t:'Challenges',d:'Guided exercises with automatic checking: build the diagram and test it with several sample values.'},
+  trace:{t:'Trace table',d:'Shows a table with the value of every variable after each block of the last run. Useful for understanding and for homework.'},
+ },
+ blk:{
+  declare:{short:'Creates a variable (or an array) with a type.',
+   long:'You must declare a variable before using it. Pick the type and the name; give a size to create an array. It starts as 0, empty text or false.',
+   fields:[['Type','Integer (whole numbers), Real (decimals), String (text) or Boolean (true/false).'],['Name','Letters, digits and _, not starting with a digit. Upper and lower case differ.'],['Size','Leave empty for a single variable. A number or an expression creates an array.']],
+   example:'Integer total   ·   Integer v[10]',tip:'Total and total are two different variables.'},
+  assign:{short:'Computes a value and stores it in a variable.',
+   long:'Evaluates the expression on the right and saves the result in the variable on the left. The result must match the variable\'s type. A number with decimals assigned to an Integer is truncated.',
+   fields:[['Variable','x, or v[i] for an element of an array.'],['Value','Any expression: numbers, variables, operators, functions.']],
+   example:'total = total + price * 2',tip:'Read it as “put the value of… into the variable”. It is not a comparison.'},
+  input:{short:'Reads a value typed by the user.',
+   long:'Pauses the program and shows a field in the console. The typed text is converted to the variable\'s type. If it is not valid, the value is asked again.',
+   fields:[['Variable','Where the value is saved. It must already be declared.'],['Message','Text shown before the field (optional).']],
+   example:'Input age   (message: How old are you?)',tip:'For a Real you can type either a dot or a comma.'},
+  output:{short:'Writes a value to the console.',
+   long:'Evaluates the expression and shows the result. With “New line after” on, the next Output starts on a new line. Use & to join text and numbers.',
+   fields:[['What to write','An expression: text in quotes, numbers, variables.'],['New line after','When off, the next Output continues on the same line.']],
+   example:'Output "Total: " & total',tip:'Turn “New line after” off to print several values on one line inside a loop.'},
+  if:{short:'Chooses between two paths based on a condition.',
+   long:'If the condition is true the program follows the Yes branch, otherwise the No branch, which can stay empty. Then the two branches join again.',
+   fields:[['Condition','An expression that gives true or false, such as x > 0 or name == "Anna".']],
+   example:'x > 0 and x < 10',tip:'For more than two choices, put another If inside the No branch.'},
+  while:{short:'Repeats the inner blocks while the condition is true.',
+   long:'Checks the condition before every turn. If it is false from the start, the body never runs. Something inside the loop must change, or it never ends.',
+   fields:[['Condition','The loop keeps going while it is true.']],
+   example:'n > 0',tip:'Use While when you do not know in advance how many times to repeat.'},
+  for:{short:'Repeats the inner blocks counting from one value to another.',
+   long:'The variable starts at From and goes to To, end included, changing by Step each turn. A negative step counts backwards. If the variable does not exist it is created.',
+   fields:[['Variable','The counter, for example i.'],['From','Starting value.'],['To','Final value, included.'],['Step','How much it changes each turn. Empty or 1 counts up, -1 counts down.']],
+   example:'i: 1 → 10, step 2',tip:'Use For when you already know how many times to repeat.'},
+  do:{short:'Runs the body at least once, then checks the condition.',
+   long:'Unlike While, the condition is checked after the body: the block always runs at least once and repeats while the condition is true. Good for asking for a value until it is valid.',
+   fields:[['Condition','The loop repeats while it is true. The check is at the bottom.']],
+   example:'answer != "q"',tip:'The “Yes” branch goes back to the top, the “No” branch leaves the loop.'},
+  comment:{short:'A note for the reader. It is not executed.',
+   long:'Use it to explain a step. In the generated code it becomes a comment.',
+   fields:[['Text','The note, possibly on several lines.']],
+   example:'Compute the average',tip:'A good comment explains why, not what the block already says.'},
+ },
+ msg:{
+  wrongNode:'This block has an error: ',
+ },
+};
+
+/* =============================== MANUALE =============================== */
+function opTable(){
+  const r=[
+   ['+  -  *  /','+  -  *  /',M('Somma, differenza, prodotto, divisione. La divisione dà sempre un numero con decimali.','Add, subtract, multiply, divide. Division always gives a number with decimals.'),'7 / 2 → 3.5'],
+   ['%','%',M('Resto della divisione','Remainder of a division'),'7 % 3 → 1'],
+   ['^','^',M('Potenza','Power'),'2 ^ 10 → 1024'],
+   ['&','&',M('Unisce testi e numeri in un unico testo','Joins text and numbers into one text'),'"n=" & 5 → "n=5"'],
+   ['==  !=  <  >  <=  >=','',M('Confronti (si può usare anche = per l\'uguaglianza e <> per la diversità)','Comparisons (= also works for equality and <> for inequality)'),'x >= 10'],
+   ['and  or  not','',M('Logica: e, o, negazione (anche && || !)','Logic: and, or, negation (also && || !)'),'x > 0 and not done'],
+  ];
+  return '<table class="mt"><thead><tr><th>'+M('Operatore','Operator')+'</th><th>'+M('Cosa fa','What it does')+'</th><th>'+M('Esempio','Example')+'</th></tr></thead><tbody>'
+   +r.map(x=>'<tr><td><code>'+x[0]+'</code></td><td>'+x[2]+'</td><td><code>'+x[3]+'</code></td></tr>').join('')+'</tbody></table>';
+}
+function funcTable(){
+  const i=LANG==='it'?2:3;
+  return '<table class="mt"><thead><tr><th>'+M('Funzione','Function')+'</th><th>'+M('Cosa fa','What it does')+'</th><th>'+M('Esempio','Example')+'</th></tr></thead><tbody>'
+   +FUNCS.map(f=>'<tr><td><code>'+f[1]+'</code></td><td>'+f[i]+'</td><td><code>'+f[4]+'</code></td></tr>').join('')+'</tbody></table>';
+}
+function blockManual(){
+  return ORDER.map(k=>{
+    const b=t('blk.'+k);
+    return '<div class="bman"><h4>'+BN[k]+'</h4><p><b>'+esc(b.short)+'</b> '+esc(b.long)+'</p>'
+     +'<ul>'+b.fields.map(f=>'<li><b>'+esc(f[0])+'.</b> '+esc(f[1])+'</li>').join('')+'</ul>'
+     +'<p class="ex"><span>'+t('tip.tags.example')+'</span> <code>'+esc(b.example)+'</code></p>'
+     +'<p class="mtip"><span>'+t('tip.tags.tip')+'</span> '+esc(b.tip)+'</p></div>';
+  }).join('');
+}
+function shortcutTable(){
+  const r=[['Ctrl + Enter',M('Esegui','Run')],['Ctrl + Z',M('Annulla','Undo')],['Ctrl + Y / Ctrl + Shift + Z',M('Ripeti','Redo')],['F10',M('Passo (esegue un blocco)','Step (runs one block)')],['F9',M('Attiva o toglie il punto di interruzione','Toggle the breakpoint')],['Ctrl + D',M('Duplica il blocco selezionato','Duplicate the selected block')],['Delete',M('Elimina il blocco selezionato','Delete the selected block')],['Esc',M('Chiude menu e finestre','Closes menus and windows')],['Ctrl + '+M('rotella','wheel'),M('Zoom sul diagramma','Zoom the diagram')],[M('Trascina lo sfondo','Drag the background'),M('Sposta il diagramma','Pan the diagram')],[M('Doppio clic su un blocco','Double-click a block'),M('Porta il cursore nei suoi campi','Moves the cursor to its fields')]];
+  return '<table class="mt"><tbody>'+r.map(x=>'<tr><td><code>'+x[0]+'</code></td><td>'+x[1]+'</td></tr>').join('')+'</tbody></table>';
+}
+function manualSections(){
+  const IT=LANG==='it';
+  return [
+  {id:'start',h:M('Primi passi','Quick start'),b:IT?
+   '<ol><li>Scegli un programma da <b>Esempi…</b> oppure premi <b>Nuovo</b>.</li><li>Aggiungi blocchi: clicca un blocco nel pannello a sinistra (si inserisce dopo quello selezionato) oppure clicca un punto <b>+</b> sul diagramma.</li><li>Seleziona un blocco e compila i suoi campi nel pannello a destra.</li><li>Premi <b>Esegui</b>. La <b>Console</b> mostra il risultato e <b>Variabili</b> mostra i valori.</li><li>Premi <b>Codice</b> per vedere lo stesso programma in 11 linguaggi.</li></ol>'
+   :'<ol><li>Pick a program from <b>Examples…</b> or press <b>New</b>.</li><li>Add blocks: click a block in the left panel (it is inserted after the selected one) or click a <b>+</b> dot on the diagram.</li><li>Select a block and fill in its fields in the right panel.</li><li>Press <b>Run</b>. The <b>Console</b> shows the result and <b>Variables</b> shows the values.</li><li>Press <b>Code</b> to see the same program in 11 languages.</li></ol>'},
+  {id:'ui',h:M('L\'area di lavoro','The workspace'),b:IT?
+   '<p><b>Barra superiore.</b> Nome del programma, esempi, annulla e ripeti, i comandi di esecuzione, poi Codice, Esporta, Importa, Nuovo e Impostazioni.</p><p><b>Blocchi</b> (a sinistra). I mattoncini del diagramma. Passa il mouse su uno per leggerne la spiegazione.</p><p><b>Diagramma</b> (al centro). Clicca un blocco per selezionarlo. Trascina lo sfondo per spostarti. Con Ctrl e rotella fai zoom. I punti <b>+</b> fra i blocchi servono a inserirne di nuovi.</p><p><b>Pannello destro.</b> In alto le proprietà del blocco selezionato (o questa guida), poi le variabili e la console.</p>'
+   :'<p><b>Top bar.</b> Program name, examples, undo and redo, the run controls, then Code, Export, Import, New and Settings.</p><p><b>Blocks</b> (left). The building pieces of the diagram. Hover over one to read its explanation.</p><p><b>Diagram</b> (center). Click a block to select it. Drag the background to pan. Ctrl and the wheel zoom. The <b>+</b> dots between blocks insert new ones.</p><p><b>Right panel.</b> At the top the selected block\'s properties (or this guide), then the variables and the console.</p>'},
+  {id:'blocks',h:M('I blocchi','Blocks'),b:'<p>'+M('I comandi principali hanno il loro nome inglese, come nei linguaggi di programmazione.','The main commands keep their English names, as in programming languages.')+'</p>'+blockManual()},
+  {id:'vars',h:M('Variabili e tipi','Variables and types'),b:IT?
+   '<p>Una variabile è una scatola con un nome che contiene un valore. Va dichiarata con <b>Declare</b> prima dell\'uso.</p><table class="mt"><tbody><tr><td><code>Integer</code></td><td>Numeri interi: 3, -12, 0</td></tr><tr><td><code>Real</code></td><td>Numeri con decimali: 3.14, -0.5</td></tr><tr><td><code>String</code></td><td>Testo, fra virgolette: "ciao"</td></tr><tr><td><code>Boolean</code></td><td>Vero o falso: <code>true</code>/<code>false</code> (anche <code>vero</code>/<code>falso</code>)</td></tr></tbody></table><p><b>Array.</b> Indica una dimensione in Declare, per esempio 10. Gli elementi si numerano da 0: <code>v[0]</code> è il primo, <code>v[9]</code> l\'ultimo. Un indice fuori dai limiti ferma il programma con un errore.</p><p><b>Valore iniziale.</b> 0 per i numeri, testo vuoto per le stringhe, falso per i Boolean.</p><p><b>Tipi e assegnazioni.</b> Una variabile accetta solo valori del suo tipo. Un Real assegnato a un Integer perde i decimali. Una variabile del blocco For si crea da sola se non esiste.</p>'
+   :'<p>A variable is a named box that holds a value. Declare it with <b>Declare</b> before using it.</p><table class="mt"><tbody><tr><td><code>Integer</code></td><td>Whole numbers: 3, -12, 0</td></tr><tr><td><code>Real</code></td><td>Numbers with decimals: 3.14, -0.5</td></tr><tr><td><code>String</code></td><td>Text, in quotes: "hello"</td></tr><tr><td><code>Boolean</code></td><td>True or false: <code>true</code>/<code>false</code> (<code>vero</code>/<code>falso</code> also work)</td></tr></tbody></table><p><b>Arrays.</b> Give a size in Declare, for example 10. Elements are numbered from 0: <code>v[0]</code> is the first, <code>v[9]</code> the last. An index out of range stops the program with an error.</p><p><b>Starting value.</b> 0 for numbers, empty text for strings, false for Booleans.</p><p><b>Types and assignments.</b> A variable only accepts values of its type. A Real assigned to an Integer loses its decimals. A For variable is created automatically if it does not exist.</p>'},
+  {id:'expr',h:M('Espressioni','Expressions'),b:'<p>'+M('Un\'espressione combina valori, variabili, operatori e funzioni. Il testo va fra virgolette doppie o singole; dentro il testo <code>\\n</code> va a capo. La costante <code>pi</code> è già disponibile.','An expression combines values, variables, operators and functions. Text goes in double or single quotes; inside text <code>\\n</code> is a new line. The constant <code>pi</code> is built in.')+'</p>'+opTable()
+   +'<p>'+M('<b>Precedenza</b> (dalla più forte): potenza, segno meno, <code>* / %</code>, <code>+ -</code>, <code>&amp;</code>, confronti, <code>not</code>, <code>and</code>, <code>or</code>. Le parentesi cambiano l\'ordine: <code>(a + b) * c</code>.','<b>Precedence</b> (strongest first): power, minus sign, <code>* / %</code>, <code>+ -</code>, <code>&amp;</code>, comparisons, <code>not</code>, <code>and</code>, <code>or</code>. Parentheses change the order: <code>(a + b) * c</code>.')+'</p>'},
+  {id:'funcs',h:M('Funzioni','Functions'),b:funcTable()},
+  {id:'run',h:M('Eseguire un programma','Running a program'),b:IT?
+   '<p><b>Esegui</b> avvia tutto. <b>Passo</b> esegue un blocco alla volta: il blocco in corso si colora di giallo e le variabili che cambiano lampeggiano. <b>Pausa</b> sospende, <b>Stop</b> interrompe. Il cursore <b>Velocità</b> regola l\'attesa fra i blocchi.</p><p><b>Input.</b> Quando il programma arriva a un blocco Input compare un campo sotto la console. Scrivi il valore e premi Invio. Se il valore non è del tipo giusto, viene richiesto.</p><p><b>Errori.</b> Se qualcosa non va, il blocco responsabile diventa rosso e la console spiega il motivo. Un blocco con il bordo rosso tratteggiato ha un campo non valido anche prima di eseguire.</p><p><b>Programmi che non finiscono.</b> Dopo 30 milioni di passi il programma si ferma da solo. Puoi sempre premere Stop.</p><p>Durante l\'esecuzione il diagramma è bloccato: ferma il programma per modificarlo.</p>'
+   :'<p><b>Run</b> starts everything. <b>Step</b> runs one block at a time: the current block turns yellow and the variables that change flash. <b>Pause</b> suspends, <b>Stop</b> ends. The <b>Speed</b> slider sets the wait between blocks.</p><p><b>Input.</b> When the program reaches an Input block, a field appears under the console. Type the value and press Enter. If the value is not of the right type, it is asked again.</p><p><b>Errors.</b> If something goes wrong, the responsible block turns red and the console explains why. A block with a dashed red outline has an invalid field even before running.</p><p><b>Programs that never end.</b> After 30 million steps the program stops by itself. You can always press Stop.</p><p>While running, the diagram is locked: stop the program to edit it.</p>'},
+  {id:'debug',h:M('Debug: interruzioni e osserva','Debugging: breakpoints and watch'),b:IT?
+   '<p><b>Punto di interruzione.</b> Seleziona un blocco e premi il pulsante <b>Punto di interruzione</b> (oppure F9): compare un pallino rosso. Quando il programma sta per eseguire quel blocco si mette in pausa. Continua con <b>Continua</b> o avanza con <b>Passo</b> (F10). In un ciclo la pausa avviene a ogni giro. Le interruzioni si salvano con il programma.</p><p><b>Osserva.</b> Nella casella <b>Osserva</b> scrivi un\'espressione, per esempio <code>sum * 2</code> o <code>v[i] &gt; 5</code>: il valore si aggiorna a ogni blocco durante l\'esecuzione.</p>'
+   :'<p><b>Breakpoint.</b> Select a block and press the <b>Breakpoint</b> button (or F9): a red dot appears. When the program is about to run that block it pauses. Go on with <b>Continue</b> or advance with <b>Step</b> (F10). Inside a loop it pauses on every turn. Breakpoints are saved with the program.</p><p><b>Watch.</b> In the <b>Watch</b> box type an expression, for example <code>sum * 2</code> or <code>v[i] &gt; 5</code>: its value updates at every block while the program runs.</p>'},
+  {id:'code',h:M('La pagina Codice','The Code page'),b:IT?
+   '<p>Il pulsante <b>Codice</b> apre una pagina con il programma tradotto in <b>JavaScript, Python, Java, C, C++, C#, Go, PHP, Ruby, Kotlin e Swift</b>. Scegli il linguaggio dall\'elenco, oppure attiva «Mostra tutti i linguaggi» per vederli uno sotto l\'altro. Ogni scheda ha il comando per eseguire il file e il pulsante Copia.</p><p><b>Cosa tenere presente.</b></p><ul><li>La divisione dà sempre un risultato con decimali, come nel diagramma.</li><li>Un numero con decimali assegnato a un Integer viene convertito in intero troncando.</li><li>I Boolean si stampano come <code>true</code>/<code>false</code> o <code>True</code>/<code>False</code>, secondo il linguaggio.</li><li>In C le stringhe sono array di caratteri: alcune funzioni di testo non sono tradotte e la pagina lo segnala.</li><li>Il codice per JavaScript funziona con Node.js e legge l\'Input dallo standard input.</li></ul><p>Ogni scheda indica se il codice è stato provato con un compilatore o un interprete reale.</p>'
+   :'<p>The <b>Code</b> button opens a page with the program translated to <b>JavaScript, Python, Java, C, C++, C#, Go, PHP, Ruby, Kotlin and Swift</b>. Pick the language from the list, or turn on “Show all languages” to see them one under the other. Each card has the command to run the file and a Copy button.</p><p><b>Things to keep in mind.</b></p><ul><li>Division always gives a result with decimals, as in the diagram.</li><li>A number with decimals assigned to an Integer is converted by truncation.</li><li>Booleans print as <code>true</code>/<code>false</code> or <code>True</code>/<code>False</code>, depending on the language.</li><li>In C, strings are character arrays: some text functions are not translated and the page says so.</li><li>The JavaScript code runs on Node.js and reads Input from standard input.</li></ul><p>Each card says whether the code was tested with a real compiler or interpreter.</p>'},
+  {id:'extra',h:M('Sfide, traccia e immagini','Challenges, trace and images'),b:IT?
+   '<p><b>Sfide.</b> Il pulsante <b>Sfide</b> elenca esercizi di tre livelli. Premi <b>Inizia</b> per un diagramma vuoto, costruisci la soluzione e premi <b>Controlla la mia soluzione</b>: EDUFLOW esegue il programma con più valori di prova e confronta ciò che scrive con il risultato atteso (maiuscole e spazi non contano). Conta solo ciò che scrivono i blocchi Output. Ogni sfida ha un suggerimento e una soluzione da consultare, e i progressi restano in questo browser.</p><p><b>Tabella di traccia.</b> Dopo un\'esecuzione, <b>Traccia</b> nella console mostra una riga per ogni blocco con il valore di tutte le variabili. È il modo classico per verificare a mano un algoritmo.</p><p><b>Immagine SVG.</b> In <b>Esporta</b> la scheda «Immagine SVG» mostra il diagramma come immagine vettoriale: copia il testo e salvalo come file .svg, oppure incollalo in un documento o in una presentazione.</p>'
+   :'<p><b>Challenges.</b> The <b>Challenges</b> button lists exercises at three levels. Press <b>Start</b> for an empty diagram, build the solution and press <b>Check my solution</b>: EDUFLOW runs the program with several sample values and compares what it writes with the expected result (case and spacing do not matter). Only what Output blocks write counts. Each challenge has a hint and a solution to look at, and your progress stays in this browser.</p><p><b>Trace table.</b> After a run, <b>Trace</b> in the console shows one row per block with the value of every variable. It is the classic way to check an algorithm by hand.</p><p><b>SVG image.</b> In <b>Export</b> the “SVG image” tab shows the diagram as a vector image: copy the text and save it as an .svg file, or paste it into a document or a presentation.</p>'},
+  {id:'save',h:M('Salvare, esportare, importare','Saving, exporting, importing'),b:IT?
+   '<p>Il programma si salva da solo in questo browser a ogni modifica e riappare quando riapri la pagina. <b>Esporta</b> mostra il programma come testo: copialo e conservalo dove vuoi. <b>Importa</b> lo riapre da testo incollato o da un file. La cronologia di Annulla conserva fino a 200 modifiche.</p>'
+   :'<p>The program saves itself in this browser after every change and comes back when you reopen the page. <b>Export</b> shows the program as text: copy it and keep it wherever you like. <b>Import</b> reopens it from pasted text or from a file. The Undo history keeps up to 200 changes.</p>'},
+  {id:'keys',h:M('Scorciatoie','Shortcuts'),b:shortcutTable()},
+  {id:'faq',h:M('Problemi comuni','Troubleshooting'),b:IT?
+   '<dl><dt>«La variabile "x" non è stata dichiarata»</dt><dd>Aggiungi un blocco Declare per x prima del punto in cui la usi.</dd><dt>Un blocco ha il bordo rosso tratteggiato</dt><dd>Passa il mouse sul blocco: la spiegazione dice quale campo è sbagliato. Controlla virgolette e parentesi.</dd><dt>Il programma non finisce mai</dt><dd>In un While o Do While, qualcosa dentro il ciclo deve cambiare la condizione. Premi Stop.</dd><dt>«L\'operatore + richiede due numeri»</dt><dd>Stai sommando un testo e un numero. Usa <code>&amp;</code> per unirli.</dd><dt>Un numero con la virgola non viene letto</dt><dd>Nei campi del diagramma usa il punto: <code>2.5</code>. Nei valori digitati in Input vanno bene sia il punto sia la virgola.</dd><dt>Il risultato del codice generato è diverso</dt><dd>Controlla le note nella pagina Codice: i formati di stampa dei numeri decimali e dei Boolean cambiano da un linguaggio all\'altro.</dd></dl>'
+   :'<dl><dt>“Variable "x" has not been declared”</dt><dd>Add a Declare block for x before the point where you use it.</dd><dt>A block has a dashed red outline</dt><dd>Hover over the block: the explanation says which field is wrong. Check quotes and parentheses.</dd><dt>The program never ends</dt><dd>In a While or Do While, something inside the loop must change the condition. Press Stop.</dd><dt>“The operator + needs two numbers”</dt><dd>You are adding a text and a number. Use <code>&amp;</code> to join them.</dd><dt>A number with a comma is not read</dt><dd>In diagram fields use a dot: <code>2.5</code>. In values typed into Input, both dot and comma work.</dd><dt>The generated code gives a different result</dt><dd>Check the notes on the Code page: print formats for decimals and Booleans differ between languages.</dd></dl>'},
+  ];
+}
+
+/* ---------- utilità ---------- */
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+class SynErr extends Error{}
+class RunErr extends Error{}
+class StopErr extends Error{}
+const kind=v=>typeof v==='number'?M('un numero','a number'):typeof v==='string'?M('del testo','text'):M('un valore vero/falso','a true/false value');
+const fmtBool=b=>LANG==='it'?(b?'vero':'falso'):(b?'true':'false');
+function fmt(v){
+  if(typeof v==='number')return Number.isInteger(v)?String(v):String(+v.toPrecision(12));
+  if(typeof v==='boolean')return fmtBool(v);
+  return String(v);
+}
+
+/* ---------- espressioni: tokenizer e parser ---------- */
+function tokenize(s){
+  const tk=[];let i=0;
+  const isD=c=>c>='0'&&c<='9';
+  while(i<s.length){
+    const c=s[i];
+    if(/\s/.test(c)){i++;continue}
+    if(isD(c)||(c==='.'&&isD(s[i+1]||''))){
+      let j=i;while(isD(s[j]||''))j++;
+      if(s[j]==='.'){j++;while(isD(s[j]||''))j++}
+      tk.push({t:'num',v:parseFloat(s.slice(i,j))});i=j;continue}
+    if(c==='"'||c==="'"){
+      let j=i+1,v='';
+      for(;;){
+        if(j>=s.length)throw new SynErr(M('Stringa non chiusa: manca ','Unclosed string: missing ')+c);
+        const d=s[j];
+        if(d==='\\'){const e=s[j+1];v+=e==='n'?'\n':e==='t'?'\t':(e||'');j+=2;continue}
+        if(d===c){j++;break}
+        v+=d;j++}
+      tk.push({t:'str',v});i=j;continue}
+    if(/[\p{L}_]/u.test(c)){
+      let j=i+1;while(j<s.length&&/[\p{L}\p{N}_]/u.test(s[j]))j++;
+      const id=s.slice(i,j),lw=id.toLowerCase();
+      if(lw==='and'||lw==='or'||lw==='not')tk.push({t:'op',v:lw});
+      else if(lw==='vero'||lw==='true')tk.push({t:'bool',v:true});
+      else if(lw==='falso'||lw==='false')tk.push({t:'bool',v:false});
+      else tk.push({t:'id',v:id});
+      i=j;continue}
+    const two=s.slice(i,i+2);
+    if(['==','!=','<>','<=','>=','&&','||'].includes(two)){tk.push({t:'op',v:two});i+=2;continue}
+    if('+-*/%^&<>=!(),[]'.includes(c)){tk.push({t:'op',v:c});i++;continue}
+    throw new SynErr(M('Carattere non valido: ','Invalid character: ')+c);
+  }
+  return tk;
+}
+function parseExpr(src){
+  const tk=tokenize(src);
+  if(!tk.length)throw new SynErr(M('Il campo è vuoto','The field is empty'));
+  let p=0;
+  const pk=()=>tk[p];
+  const isOp=(...v)=>pk()&&pk().t==='op'&&v.includes(pk().v);
+  const take=()=>tk[p++];
+  const orE=()=>{let l=andE();while(isOp('or','||')){take();l={k:'bin',op:'or',l,r:andE()}}return l};
+  const andE=()=>{let l=notE();while(isOp('and','&&')){take();l={k:'bin',op:'and',l,r:notE()}}return l};
+  const notE=()=>{if(isOp('not','!')){take();return{k:'un',op:'not',e:notE()}}return cmp()};
+  const cmp=()=>{let l=cat();while(isOp('==','!=','<>','<','>','<=','>=','=')){let op=take().v;if(op==='=')op='==';if(op==='<>')op='!=';l={k:'bin',op,l,r:cat()}}return l};
+  const cat=()=>{let l=add();while(isOp('&')){take();l={k:'bin',op:'&',l,r:add()}}return l};
+  const add=()=>{let l=mul();while(isOp('+','-')){const op=take().v;l={k:'bin',op,l,r:mul()}}return l};
+  const mul=()=>{let l=unary();while(isOp('*','/','%')){const op=take().v;l={k:'bin',op,l,r:unary()}}return l};
+  const unary=()=>{if(isOp('-')){take();return{k:'un',op:'-',e:unary()}}if(isOp('+')){take();return unary()}return pow()};
+  const pow=()=>{const b=prim();if(isOp('^')){take();return{k:'bin',op:'^',l:b,r:unary()}}return b};
+  const prim=()=>{
+    const tkn=take();
+    if(!tkn)throw new SynErr(M('Espressione incompleta','Incomplete expression'));
+    if(tkn.t==='num')return{k:'num',v:tkn.v};
+    if(tkn.t==='str')return{k:'str',v:tkn.v};
+    if(tkn.t==='bool')return{k:'bool',v:tkn.v};
+    if(tkn.t==='id'){
+      if(isOp('(')){
+        take();const a=[];
+        if(!isOp(')')){do{a.push(orE())}while(isOp(',')&&take())}
+        if(!isOp(')'))throw new SynErr(M('Manca la parentesi chiusa )','Missing closing parenthesis )'));
+        take();
+        const f=FN[tkn.v];
+        if(!f)throw new SynErr(M('Funzione sconosciuta: ','Unknown function: ')+tkn.v);
+        if(a.length!==f.n)throw new SynErr(M(tkn.v+'() vuole '+f.n+(f.n===1?' argomento':' argomenti'),tkn.v+'() takes '+f.n+(f.n===1?' argument':' arguments')));
+        return{k:'call',f:tkn.v,a};
+      }
+      if(isOp('[')){
+        take();const i=orE();
+        if(!isOp(']'))throw new SynErr(M('Manca la parentesi quadra chiusa ]','Missing closing bracket ]'));
+        take();return{k:'idx',n:tkn.v,i};
+      }
+      return{k:'var',n:tkn.v};
+    }
+    if(tkn.v==='('){const e=orE();if(!isOp(')'))throw new SynErr(M('Manca la parentesi chiusa )','Missing closing parenthesis )'));take();return e}
+    throw new SynErr(M('Simbolo inatteso: ','Unexpected symbol: ')+tkn.v);
+  };
+  const e=orE();
+  if(p<tk.length)throw new SynErr(M('Simbolo inatteso: ','Unexpected symbol: ')+tk[p].v);
+  return e;
+}
+const pcache=new Map();
+function parseC(src){
+  let r=pcache.get(src);
+  if(!r){
+    try{r={ast:parseExpr(src)}}catch(e){if(!(e instanceof SynErr))throw e;r={err:e.message}}
+    if(pcache.size>3000)pcache.clear();
+    pcache.set(src,r);
+  }
+  return r;
+}
+const IDENT=/^[\p{L}_][\p{L}\p{N}_]*$/u;
+const RESERVED=new Set(['and','or','not','vero','falso','true','false']);
+function identErr(s){
+  s=(s||'').trim();
+  if(!s)return M('Manca il nome della variabile','The variable name is missing');
+  if(!IDENT.test(s)||RESERVED.has(s.toLowerCase()))return M('Nome non valido: usa lettere, cifre e _, senza iniziare con una cifra','Invalid name: use letters, digits and _, not starting with a digit');
+  return '';
+}
+function targetErr(src){
+  const r=parseC(src||'');
+  if(r.err)return r.err;
+  if(r.ast.k!=='var'&&r.ast.k!=='idx')return M('Deve essere una variabile, per esempio x oppure v[i]','Must be a variable, for example x or v[i]');
+  return '';
+}
+const LAB={size:()=>M('Dimensione','Size'),var:()=>M('Variabile','Variable'),expr:()=>M('Espressione','Expression'),cond:()=>M('Condizione','Condition'),from:()=>M('Da','From'),to:()=>M('A','To'),step:()=>M('Passo','Step')};
+function nodeErrors(n){
+  const e=[],ex=(s,l)=>{const r=parseC(s||'');if(r.err)e.push(LAB[l]()+': '+r.err)};
+  switch(n.type){
+    case 'declare':{const m=identErr(n.name);if(m)e.push(m);if((n.size||'').trim())ex(n.size,'size');break}
+    case 'assign':{const m=targetErr(n.target);if(m)e.push(LAB.var()+': '+m);ex(n.expr,'expr');break}
+    case 'input':{const m=targetErr(n.name);if(m)e.push(LAB.var()+': '+m);break}
+    case 'output':ex(n.expr,'expr');break;
+    case 'if':case 'while':case 'do':ex(n.cond,'cond');break;
+    case 'for':{const m=identErr(n.v);if(m)e.push(m);ex(n.from,'from');ex(n.to,'to');if((n.step||'').trim())ex(n.step,'step');break}
+  }
+  return e;
+}
+
+/* ---------- funzioni disponibili ---------- */
+const needNum=(x,f)=>{if(typeof x!=='number')throw new RunErr(f+M('() richiede un numero','() needs a number'));return x};
+const M1=(name,f)=>[name,{n:1,run:x=>f(needNum(x,name))}];
+const needTxt=(s,f)=>{if(typeof s!=='string')throw new RunErr(f+M('() richiede un testo','() needs a text'));return s};
+const FN=Object.fromEntries([
+  M1('sqrt',x=>{if(x<0)throw new RunErr(M('sqrt() di un numero negativo','sqrt() of a negative number'));return Math.sqrt(x)}),
+  M1('abs',Math.abs),M1('sin',Math.sin),M1('cos',Math.cos),M1('tan',Math.tan),
+  M1('log',x=>{if(x<=0)throw new RunErr(M('log() richiede un numero positivo','log() needs a positive number'));return Math.log(x)}),
+  M1('log10',x=>{if(x<=0)throw new RunErr(M('log10() richiede un numero positivo','log10() needs a positive number'));return Math.log10(x)}),
+  M1('exp',Math.exp),M1('floor',Math.floor),M1('ceil',Math.ceil),M1('round',Math.round),M1('int',Math.trunc),M1('sign',Math.sign),
+  ['pow',{n:2,run:(a,b)=>Math.pow(needNum(a,'pow'),needNum(b,'pow'))}],
+  ['min',{n:2,run:(a,b)=>Math.min(needNum(a,'min'),needNum(b,'min'))}],
+  ['max',{n:2,run:(a,b)=>Math.max(needNum(a,'max'),needNum(b,'max'))}],
+  ['random',{n:1,run:x=>{needNum(x,'random');if(!Number.isInteger(x)||x<1)throw new RunErr(M('random(n) richiede un intero maggiore di 0','random(n) needs an integer greater than 0'));return Math.floor(Math.random()*x)}}],
+  ['len',{n:1,run:s=>{if(typeof s!=='string')throw new RunErr(M('len() richiede un testo o un array','len() needs a text or an array'));return s.length}}],
+  ['upper',{n:1,run:s=>needTxt(s,'upper').toUpperCase()}],
+  ['lower',{n:1,run:s=>needTxt(s,'lower').toLowerCase()}],
+  ['substr',{n:3,run:(s,a,b)=>needTxt(s,'substr').substr(needNum(a,'substr'),needNum(b,'substr'))}],
+  ['str',{n:1,run:x=>fmt(x)}],
+  ['num',{n:1,run:s=>{const v=typeof s==='number'?s:Number(String(s).replace(',','.'));if(String(s).trim()===''||!Number.isFinite(v))throw new RunErr(M('num() non riesce a convertire "','num() cannot convert "')+s+'"');return v}}],
+]);
+
+/* ---------- valutazione ---------- */
+function evalA(a,env){
+  switch(a.k){
+    case 'num':case 'str':case 'bool':return a.v;
+    case 'var':{
+      const v=env.get(a.n);
+      if(!v){if(a.n==='pi')return Math.PI;throw new RunErr(M('La variabile "'+a.n+'" non è stata dichiarata','Variable "'+a.n+'" has not been declared'))}
+      if(v.arr)throw new RunErr(M('"'+a.n+'" è un array: usa '+a.n+'[indice]','"'+a.n+'" is an array: use '+a.n+'[index]'));
+      return v.value;
+    }
+    case 'idx':{
+      const v=env.get(a.n);
+      if(!v)throw new RunErr(M('La variabile "'+a.n+'" non è stata dichiarata','Variable "'+a.n+'" has not been declared'));
+      if(!v.arr)throw new RunErr(M('"'+a.n+'" non è un array','"'+a.n+'" is not an array'));
+      const i=evalA(a.i,env);
+      if(!Number.isInteger(i)||i<0||i>=v.value.length)throw new RunErr(M('Indice fuori limiti: ','Index out of range: ')+a.n+'['+fmt(i)+M('] (dimensione ','] (size ')+v.value.length+')');
+      return v.value[i];
+    }
+    case 'un':{
+      const x=evalA(a.e,env);
+      if(a.op==='not'){if(typeof x!=='boolean')throw new RunErr(M('"not" richiede un valore vero/falso','"not" needs a true/false value'));return !x}
+      return -needNum(x,M('Il segno meno','The minus sign'));
+    }
+    case 'call':{
+      if(a.f==='len'&&a.a[0].k==='var'){const v=env.get(a.a[0].n);if(v&&v.arr)return v.value.length}
+      return FN[a.f].run(...a.a.map(x=>evalA(x,env)));
+    }
+    case 'bin':{
+      const op=a.op;
+      if(op==='and'||op==='or'){
+        const l=evalA(a.l,env);
+        if(typeof l!=='boolean')throw new RunErr(M('"'+op+'" richiede valori vero/falso','"'+op+'" needs true/false values'));
+        if(op==='and'?!l:l)return l;
+        const r=evalA(a.r,env);
+        if(typeof r!=='boolean')throw new RunErr(M('"'+op+'" richiede valori vero/falso','"'+op+'" needs true/false values'));
+        return r;
+      }
+      const l=evalA(a.l,env),r=evalA(a.r,env);
+      const nn=()=>{if(typeof l!=='number'||typeof r!=='number')throw new RunErr(M('L\'operatore '+op+' richiede due numeri, ma ha ricevuto '+kind(l)+' e '+kind(r),'The operator '+op+' needs two numbers, but got '+kind(l)+' and '+kind(r)))};
+      switch(op){
+        case '+':if(typeof l==='string'||typeof r==='string')return fmt(l)+fmt(r);nn();return l+r;
+        case '&':return fmt(l)+fmt(r);
+        case '-':nn();return l-r;
+        case '*':nn();return l*r;
+        case '/':nn();if(r===0)throw new RunErr(M('Divisione per zero','Division by zero'));return l/r;
+        case '%':nn();if(r===0)throw new RunErr(M('Resto della divisione per zero','Remainder by zero'));return l%r;
+        case '^':nn();return Math.pow(l,r);
+        case '==':return l===r;
+        case '!=':return l!==r;
+        default:{
+          if(typeof l!==typeof r||typeof l==='boolean')throw new RunErr(M('Non posso confrontare ','Cannot compare ')+kind(l)+M(' con ',' with ')+kind(r));
+          return op==='<'?l<r:op==='>'?l>r:op==='<='?l<=r:l>=r;
+        }
+      }
+    }
+  }
+}
+const DEF={Integer:0,Real:0,String:'',Boolean:false};
+function coerce(ty,val,name){
+  const bad=()=>{throw new RunErr(M('"'+name+'" è di tipo '+tl(ty)+': non può contenere '+kind(val),'"'+name+'" is of type '+tl(ty)+': it cannot hold '+kind(val)))};
+  switch(ty){
+    case 'Integer':case 'Real':
+      if(typeof val!=='number')bad();
+      if(!Number.isFinite(val))throw new RunErr(M('Il risultato non è un numero valido','The result is not a valid number'));
+      return ty==='Integer'?Math.trunc(val):val;
+    case 'String':if(typeof val!=='string')bad();return val;
+    default:if(typeof val!=='boolean')bad();return val;
+  }
+}
+function parseInput(raw,type){
+  const s=String(raw);
+  if(type==='Integer'){if(!/^\s*[-+]?\d+\s*$/.test(s))throw new RunErr(M('Valore non valido: serve un numero intero','Invalid value: an integer is required'));return parseInt(s,10)}
+  if(type==='Real'){const v=Number(s.replace(',','.'));if(s.trim()===''||!Number.isFinite(v))throw new RunErr(M('Valore non valido: serve un numero','Invalid value: a number is required'));return v}
+  if(type==='Boolean'){const l=s.trim().toLowerCase();if(['vero','true','1'].includes(l))return true;if(['falso','false','0'].includes(l))return false;throw new RunErr(M('Valore non valido: scrivi vero oppure falso','Invalid value: type true or false'))}
+  return s;
+}
+
+/* ---------- esecuzione ---------- */
+async function execute(prog,io,ctl){
+  const env=new Map();ctl.env=env;
+  const P=(src,what)=>{const r=parseC(src||'');if(r.err)throw new RunErr((what?what+': ':'')+r.err);return r.ast};
+  const ev=a=>evalA(a,env);
+  const cond=(src)=>{const v=ev(P(src,LAB.cond()));if(typeof v!=='boolean')throw new RunErr(M('La condizione deve essere vero o falso, non ','The condition must be true or false, not ')+kind(v));return v};
+  const ident=s=>{const m=identErr(s);if(m)throw new RunErr(m);return s.trim()};
+  const assign=(tg,val)=>{
+    const v=env.get(tg.n);
+    if(!v)throw new RunErr(M('La variabile "'+tg.n+'" non è stata dichiarata','Variable "'+tg.n+'" has not been declared'));
+    if(tg.k==='idx'){
+      if(!v.arr)throw new RunErr(M('"'+tg.n+'" non è un array','"'+tg.n+'" is not an array'));
+      const i=ev(tg.i);
+      if(!Number.isInteger(i)||i<0||i>=v.value.length)throw new RunErr(M('Indice fuori limiti: ','Index out of range: ')+tg.n+'['+fmt(i)+M('] (dimensione ','] (size ')+v.value.length+')');
+      v.value[i]=coerce(v.type,val,tg.n);
+    }else{
+      if(v.arr)throw new RunErr(M('"'+tg.n+'" è un array: assegna un elemento, per esempio '+tg.n+'[0]','"'+tg.n+'" is an array: assign an element, for example '+tg.n+'[0]'));
+      v.value=coerce(v.type,val,tg.n);
+    }
+  };
+  const tgt=(src)=>{const a=P(src,LAB.var());if(a.k!=='var'&&a.k!=='idx')throw new RunErr(M('Deve essere una variabile','Must be a variable'));return a};
+  async function seq(list){for(const n of list)await step(n)}
+  async function step(n){
+    try{
+      switch(n.type){
+        case 'comment':break;
+        case 'declare':{
+          await ctl.tick(n);
+          const name=ident(n.name);
+          if((n.size||'').trim()){
+            const sz=ev(P(n.size,LAB.size()));
+            if(!Number.isInteger(sz)||sz<0||sz>200000)throw new RunErr(M('Dimensione dell\'array non valida','Invalid array size'));
+            env.set(name,{type:n.vt,arr:true,value:new Array(sz).fill(DEF[n.vt])});
+          }else env.set(name,{type:n.vt,value:DEF[n.vt]});
+          break}
+        case 'assign':{await ctl.tick(n);const tg=tgt(n.target);assign(tg,ev(P(n.expr,LAB.expr())));break}
+        case 'input':{
+          await ctl.tick(n);
+          const tg=tgt(n.name),v=env.get(tg.n);
+          if(!v)throw new RunErr(M('La variabile "'+tg.n+'" non è stata dichiarata','Variable "'+tg.n+'" has not been declared'));
+          for(;;){
+            const raw=await io.input((n.prompt||'').trim()||(t('ui.enter')+tg.n),v.type,tg.n);
+            let val;
+            try{val=parseInput(raw,v.type)}catch(e){if(e instanceof RunErr){io.out(e.message+'\n','err');continue}throw e}
+            assign(tg,val);break;
+          }
+          break}
+        case 'output':{await ctl.tick(n);io.out(fmt(ev(P(n.expr,LAB.expr())))+(n.nl===false?'':'\n'));break}
+        case 'if':{await ctl.tick(n);await seq(cond(n.cond)?n.yes:n.no);break}
+        case 'while':{for(;;){await ctl.tick(n);if(!cond(n.cond))break;await seq(n.body)}break}
+        case 'do':{do{await seq(n.body);await ctl.tick(n)}while(cond(n.cond));break}
+        case 'for':{
+          await ctl.tick(n);
+          const name=ident(n.v);
+          const from=needNum(ev(P(n.from,LAB.from())),LAB.from()),to=needNum(ev(P(n.to,LAB.to())),LAB.to());
+          const st=(n.step||'').trim()===''?1:needNum(ev(P(n.step,LAB.step())),LAB.step());
+          if(st===0)throw new RunErr(M('Il passo non può essere 0','The step cannot be 0'));
+          let v=env.get(name);
+          if(!v){v={type:Number.isInteger(from)&&Number.isInteger(st)?'Integer':'Real',value:from};env.set(name,v)}
+          if(v.arr)throw new RunErr(M('"'+name+'" è un array','"'+name+'" is an array'));
+          for(let i=from;st>0?i<=to:i>=to;i+=st){
+            v.value=coerce(v.type,i,name);
+            await seq(n.body);
+            await ctl.tick(n);
+          }
+          break}
+      }
+    }catch(e){if(e instanceof RunErr&&!e.node)e.node=n;throw e}
+  }
+  await seq(prog.body);
+}
+
+/* ---------- costruzione e pulizia dei programmi ---------- */
+let _id=0;const uid=()=>'n'+(++_id);
+const mk={
+  declare:()=>({id:uid(),type:'declare',vt:'Integer',name:'x',size:''}),
+  assign:()=>({id:uid(),type:'assign',target:'x',expr:'0'}),
+  input:()=>({id:uid(),type:'input',name:'x',prompt:''}),
+  output:()=>({id:uid(),type:'output',expr:'"Hello"',nl:true}),
+  if:()=>({id:uid(),type:'if',cond:'x > 0',yes:[],no:[]}),
+  while:()=>({id:uid(),type:'while',cond:'x < 10',body:[]}),
+  for:()=>({id:uid(),type:'for',v:'i',from:'1',to:'10',step:'1',body:[]}),
+  do:()=>({id:uid(),type:'do',cond:'x < 10',body:[]}),
+  comment:()=>({id:uid(),type:'comment',text:'Note'}),
+};
+function walk(list,f){for(const n of list){f(n);for(const k of ['yes','no','body'])if(n[k])walk(n[k],f)}}
+function sanitize(list,depth=0){
+  if(!Array.isArray(list)||depth>40)return [];
+  const out=[];
+  for(const n of list){
+    if(!n||typeof n!=='object')continue;
+    const ty=n.type==='leggi'?'input':n.type;
+    if(!mk[ty])continue;
+    const b=mk[ty]();
+    for(const k of Object.keys(b)){
+      if(k==='id')continue;
+      if(Array.isArray(b[k]))b[k]=sanitize(n[k],depth+1);
+      else if(typeof n[k]===typeof b[k]){b[k]=n[k];if(typeof b[k]==='string'&&b[k].length>500)b[k]=b[k].slice(0,500)}
+    }
+    if(n.bp===true&&ty!=='comment')b.bp=true;
+    if(b.type==='declare'){if(OLDTYPES[b.vt])b.vt=OLDTYPES[b.vt];if(!TYPES.includes(b.vt))b.vt='Integer'}
+    out.push(b);
+  }
+  return out;
+}
+const D=(vt,name,size='')=>({type:'declare',vt,name,size});
+const A=(target,expr)=>({type:'assign',target,expr});
+const I=(name,prompt='')=>({type:'input',name,prompt});
+const O=(expr,nl=true)=>({type:'output',expr,nl});
+const IF=(cond,yes,no=[])=>({type:'if',cond,yes,no});
+const WH=(cond,body)=>({type:'while',cond,body});
+const FR=(v,from,to,step,body)=>({type:'for',v,from,to,step,body});
+const DO=(cond,body)=>({type:'do',cond,body});
+const C=text=>({type:'comment',text});
+const L2=(it,en)=>LANG==='it'?it:en;
+const EXAMPLES=[
+  ()=>({name:L2('Somma dei primi n numeri','Sum of the first n numbers'),body:[D('Integer','n'),D('Integer','sum'),I('n',L2('Fino a quale numero?','Up to which number?')),A('sum','0'),FR('i','1','n','1',[A('sum','sum + i')]),O(L2('"La somma è " & sum','"The sum is " & sum'))]}),
+  ()=>({name:L2('Saluto','Greeting'),body:[D('String','name'),I('name',L2('Come ti chiami?','What is your name?')),O(L2('"Ciao, " & name & "!"','"Hello, " & name & "!"'))]}),
+  ()=>({name:L2('Fattoriale','Factorial'),body:[D('Integer','n'),D('Integer','f'),I('n',L2('Di quale numero?','Of which number?')),IF('n < 0',[O(L2('"Il numero deve essere positivo"','"The number must not be negative"'))],[A('f','1'),FR('i','2','n','1',[A('f','f * i')]),O('n & "! = " & f')])]}),
+  ()=>({name:L2('Numeri primi fino a n','Prime numbers up to n'),body:[D('Integer','n'),D('Integer','d'),D('Boolean','prime'),I('n',L2('Fino a quale numero?','Up to which number?')),FR('c','2','n','1',[A('prime','true'),A('d','2'),WH('d * d <= c and prime',[IF('c % d == 0',[A('prime','false')]),A('d','d + 1')]),IF('prime',[O('c & " "',false)])])]}),
+  ()=>({name:L2('Sequenza di Fibonacci','Fibonacci sequence'),body:[D('Integer','n'),D('Integer','a'),D('Integer','b'),D('Integer','tmp'),I('n',L2('Quanti termini?','How many terms?')),A('a','0'),A('b','1'),FR('i','1','n','1',[O('a & " "',false),A('tmp','a + b'),A('a','b'),A('b','tmp')])]}),
+  ()=>({name:L2('Ordinamento a bolle','Bubble sort'),body:[D('Integer','v','6'),D('Integer','tmp'),C(L2('Riempie l\'array con valori di partenza','Fills the array with starting values')),A('v[0]','42'),A('v[1]','7'),A('v[2]','19'),A('v[3]','3'),A('v[4]','88'),A('v[5]','25'),FR('i','0','4','1',[FR('j','0','4 - i','1',[IF('v[j] > v[j + 1]',[A('tmp','v[j]'),A('v[j]','v[j + 1]'),A('v[j + 1]','tmp')])])]),FR('k','0','5','1',[O('v[k] & " "',false)])]}),
+  ()=>({name:L2('Indovina il numero','Guess the number'),body:[D('Integer','secret'),D('Integer','guess'),D('Integer','tries'),A('secret','random(100) + 1'),A('tries','0'),O(L2('"Ho pensato a un numero da 1 a 100"','"I picked a number from 1 to 100"')),DO('guess != secret',[I('guess',L2('Il tuo tentativo','Your guess')),A('tries','tries + 1'),IF('guess < secret',[O(L2('"Troppo basso"','"Too low"'))],[IF('guess > secret',[O(L2('"Troppo alto"','"Too high"'))])])]),O(L2('"Indovinato in " & tries & " tentativi!"','"Got it in " & tries & " tries!"'))]}),
+  ()=>({name:L2('Massimo comune divisore','Greatest common divisor'),body:[D('Integer','a'),D('Integer','b'),D('Integer','tmp'),I('a',L2('Primo numero','First number')),I('b',L2('Secondo numero','Second number')),C(L2('Algoritmo di Euclide','Euclid\'s algorithm')),WH('b != 0',[A('tmp','a % b'),A('a','b'),A('b','tmp')]),O(L2('"MCD = " & a','"GCD = " & a'))]}),
+  ()=>({name:L2('Tabellina','Multiplication table'),body:[D('Integer','n'),I('n',L2('Di quale numero?','Of which number?')),FR('i','1','10','1',[O('n & " x " & i & " = " & n * i')])]}),
+  ()=>({name:L2('Parola palindroma','Palindrome word'),body:[D('String','w'),D('Boolean','ok'),I('w',L2('Scrivi una parola','Type a word')),A('ok','true'),FR('i','0','len(w) - 1','1',[IF('substr(w, i, 1) != substr(w, len(w) - 1 - i, 1)',[A('ok','false')])]),IF('ok',[O(L2('"È palindroma"','"It is a palindrome"'))],[O(L2('"Non è palindroma"','"It is not a palindrome"'))])]}),
+  ()=>({name:L2('Da Celsius a Fahrenheit','Celsius to Fahrenheit'),body:[D('Real','c'),I('c',L2('Temperatura in °C','Temperature in °C')),O('c & "°C = " & c * 9 / 5 + 32 & "°F"')]}),
+  ()=>({name:L2('Conta le vocali','Count the vowels'),body:[D('String','s'),D('String','ch'),D('Integer','n'),I('s',L2('Scrivi una frase','Type a sentence')),A('n','0'),FR('i','0','len(s) - 1','1',[A('ch','lower(substr(s, i, 1))'),IF('ch == "a" or ch == "e" or ch == "i" or ch == "o" or ch == "u"',[A('n','n + 1')])]),O(L2('"Vocali: " & n','"Vowels: " & n'))]}),
+  ()=>({name:L2('Numero perfetto','Perfect number'),body:[D('Integer','n'),D('Integer','sum'),I('n',L2('Quale numero?','Which number?')),A('sum','0'),FR('d','1','n - 1','1',[IF('n % d == 0',[A('sum','sum + d')])]),IF('sum == n and n > 0',[O(L2('"È un numero perfetto"','"It is a perfect number"'))],[O(L2('"Non è perfetto"','"It is not perfect"'))])]}),
+];
+
+/* ---------- sfide ---------- */
+const CH=[
+ {id:'hello',lv:0,t:['Ciao, mondo','Hello, world'],g:['Scrivi la frase Hello, world! con un blocco Output.','Write the sentence Hello, world! with an Output block.'],h:['Il testo va fra virgolette: "Hello, world!"','Text goes in quotes: "Hello, world!"'],tests:[{i:[],o:'Hello, world!'}],sol:()=>[O('"Hello, world!"')]},
+ {id:'double',lv:0,t:['Il doppio','Double it'],g:['Leggi un numero intero n e scrivi il suo doppio.','Read an integer n and write its double.'],h:['Declare Integer n, poi Input n, poi Output n * 2.','Declare Integer n, then Input n, then Output n * 2.'],tests:[{i:['4'],o:'8'},{i:['-3'],o:'-6'},{i:['0'],o:'0'}],sol:()=>[D('Integer','n'),I('n'),O('n * 2')]},
+ {id:'evenodd',lv:0,t:['Pari o dispari','Even or odd'],g:['Leggi un intero n e scrivi pari oppure dispari.','Read an integer n and write even or odd.'],h:['Il resto della divisione per 2 si ottiene con n % 2. Usa un blocco If.','The remainder of a division by 2 is n % 2. Use an If block.'],tests:[{i:['7'],o:{it:'dispari',en:'odd'}},{i:['10'],o:{it:'pari',en:'even'}},{i:['0'],o:{it:'pari',en:'even'}}],sol:()=>[D('Integer','n'),I('n'),IF('n % 2 == 0',[O(L2('"pari"','"even"'))],[O(L2('"dispari"','"odd"'))])]},
+ {id:'sum',lv:0,t:['Somma da 1 a n','Sum from 1 to n'],g:['Leggi n e scrivi la somma 1 + 2 + … + n.','Read n and write the sum 1 + 2 + … + n.'],h:['Usa un blocco For con una variabile somma che parte da 0.','Use a For block with a sum variable that starts at 0.'],tests:[{i:['10'],o:'55'},{i:['1'],o:'1'},{i:['100'],o:'5050'}],sol:()=>[D('Integer','n'),D('Integer','s'),I('n'),FR('i','1','n','1',[A('s','s + i')]),O('s')]},
+ {id:'max3',lv:1,t:['Il maggiore di tre','Largest of three'],g:['Leggi tre numeri interi e scrivi il maggiore.','Read three integers and write the largest.'],h:['Parti da a come massimo provvisorio, poi confrontalo con b e con c.','Start with a as the temporary maximum, then compare it with b and c.'],tests:[{i:['3','9','5'],o:'9'},{i:['10','2','7'],o:'10'},{i:['-1','-5','-3'],o:'-1'},{i:['4','4','4'],o:'4'}],sol:()=>[D('Integer','a'),D('Integer','b'),D('Integer','c'),D('Integer','m'),I('a'),I('b'),I('c'),A('m','a'),IF('b > m',[A('m','b')]),IF('c > m',[A('m','c')]),O('m')]},
+ {id:'fact',lv:1,t:['Fattoriale','Factorial'],g:['Leggi n (0 o più) e scrivi n! = 1 · 2 · … · n. Ricorda che 0! = 1.','Read n (0 or more) and write n! = 1 · 2 · … · n. Remember that 0! = 1.'],h:['Il risultato parte da 1 e si moltiplica per i da 2 a n.','The result starts at 1 and is multiplied by i from 2 to n.'],tests:[{i:['5'],o:'120'},{i:['0'],o:'1'},{i:['1'],o:'1'},{i:['10'],o:'3628800'}],sol:()=>[D('Integer','n'),D('Integer','f'),I('n'),A('f','1'),FR('i','2','n','1',[A('f','f * i')]),O('f')]},
+ {id:'table',lv:1,t:['Tabellina','Times table'],g:['Leggi n e scrivi i dieci multipli n·1, n·2, … n·10, separati da spazio o uno per riga.','Read n and write the ten multiples n·1, n·2, … n·10, separated by spaces or one per line.'],h:['Un For da 1 a 10 con un Output di n * i.','A For from 1 to 10 with an Output of n * i.'],tests:[{i:['3'],o:'3 6 9 12 15 18 21 24 27 30'},{i:['7'],o:'7 14 21 28 35 42 49 56 63 70'}],sol:()=>[D('Integer','n'),I('n'),FR('i','1','10','1',[O('n * i')])]},
+ {id:'digits',lv:1,t:['Somma delle cifre','Sum of digits'],g:['Leggi un intero positivo e scrivi la somma delle sue cifre. Usa un ciclo While.','Read a positive integer and write the sum of its digits. Use a While loop.'],h:['L\'ultima cifra è n % 10. Per toglierla usa floor(n / 10).','The last digit is n % 10. To remove it use floor(n / 10).'],tests:[{i:['123'],o:'6'},{i:['9'],o:'9'},{i:['4096'],o:'19'}],sol:()=>[D('Integer','n'),D('Integer','s'),I('n'),A('s','0'),WH('n > 0',[A('s','s + n % 10'),A('n','floor(n / 10)')]),O('s')]},
+ {id:'avg',lv:1,t:['Media','Average'],g:['Leggi n e poi n numeri interi. Scrivi la loro media (può avere decimali).','Read n and then n integers. Write their average (it may have decimals).'],h:['La somma deve essere un Real, altrimenti la divisione perde i decimali nell\'assegnazione.','Keep the sum as a Real, otherwise the decimals are lost when assigning.'],tests:[{i:['3','2','4','6'],o:'4'},{i:['2','1','2'],o:'1.5'},{i:['1','7'],o:'7'}],sol:()=>[D('Integer','n'),D('Integer','x'),D('Real','s'),I('n'),A('s','0'),FR('i','1','n','1',[I('x'),A('s','s + x')]),O('s / n')]},
+ {id:'prime',lv:1,t:['Numero primo','Prime number'],g:['Leggi un intero n e scrivi primo oppure non primo.','Read an integer n and write prime or not prime.'],h:['n è primo se n > 1 e nessun d da 2 con d·d ≤ n lo divide.','n is prime if n > 1 and no d from 2 with d·d ≤ n divides it.'],tests:[{i:['7'],o:{it:'primo',en:'prime'}},{i:['1'],o:{it:'non primo',en:'not prime'}},{i:['12'],o:{it:'non primo',en:'not prime'}},{i:['13'],o:{it:'primo',en:'prime'}},{i:['2'],o:{it:'primo',en:'prime'}}],sol:()=>[D('Integer','n'),D('Integer','d'),D('Boolean','p'),I('n'),A('p','n > 1'),A('d','2'),WH('d * d <= n and p',[IF('n % d == 0',[A('p','false')]),A('d','d + 1')]),IF('p',[O(L2('"primo"','"prime"'))],[O(L2('"non primo"','"not prime"'))])]},
+ {id:'fib',lv:1,t:['Fibonacci','Fibonacci'],g:['Leggi n e scrivi i primi n termini della sequenza 0 1 1 2 3 5 …, separati da spazio.','Read n and write the first n terms of the sequence 0 1 1 2 3 5 …, separated by spaces.'],h:['Servono due variabili a e b e una temporanea. Output senza «vai a capo».','You need two variables a and b and a temporary one. Output without “new line”.'],tests:[{i:['8'],o:'0 1 1 2 3 5 8 13'},{i:['1'],o:'0'},{i:['2'],o:'0 1'}],sol:()=>[D('Integer','n'),D('Integer','a'),D('Integer','b'),D('Integer','t'),I('n'),A('a','0'),A('b','1'),FR('i','1','n','1',[O('a & " "',false),A('t','a + b'),A('a','b'),A('b','t')])]},
+ {id:'until0',lv:1,t:['Somma fino a zero','Sum until zero'],g:['Leggi numeri interi finché non arriva 0, poi scrivi la loro somma. Usa Do While.','Read integers until 0 arrives, then write their sum. Use Do While.'],h:['Con Do While la lettura avviene almeno una volta. La condizione è x != 0.','With Do While the reading happens at least once. The condition is x != 0.'],tests:[{i:['5','3','2','0'],o:'10'},{i:['0'],o:'0'},{i:['-4','4','10','0'],o:'10'}],sol:()=>[D('Integer','x'),D('Integer','s'),A('s','0'),DO('x != 0',[I('x'),A('s','s + x')]),O('s')]},
+ {id:'gcd',lv:2,t:['Massimo comune divisore','Greatest common divisor'],g:['Leggi due interi positivi e scrivi il loro massimo comune divisore.','Read two positive integers and write their greatest common divisor.'],h:['Algoritmo di Euclide: finché b è diverso da 0, sostituisci (a, b) con (b, a % b).','Euclid\'s algorithm: while b is not 0, replace (a, b) with (b, a % b).'],tests:[{i:['48','18'],o:'6'},{i:['17','5'],o:'1'},{i:['100','75'],o:'25'}],sol:()=>[D('Integer','a'),D('Integer','b'),D('Integer','t'),I('a'),I('b'),WH('b != 0',[A('t','a % b'),A('a','b'),A('b','t')]),O('a')]},
+ {id:'sort',lv:2,t:['Ordina cinque numeri','Sort five numbers'],g:['Leggi cinque interi in un array e scrivili in ordine crescente, separati da spazio.','Read five integers into an array and write them in ascending order, separated by spaces.'],h:['Declare Integer v con dimensione 5. Due For annidati confrontano v[j] e v[j + 1] e li scambiano.','Declare Integer v with size 5. Two nested For loops compare v[j] and v[j + 1] and swap them.'],tests:[{i:['5','2','9','1','7'],o:'1 2 5 7 9'},{i:['3','3','1','2','0'],o:'0 1 2 3 3'}],sol:()=>[D('Integer','v','5'),D('Integer','t'),FR('i','0','4','1',[I('v[i]')]),FR('i','0','3','1',[FR('j','0','3 - i','1',[IF('v[j] > v[j + 1]',[A('t','v[j]'),A('v[j]','v[j + 1]'),A('v[j + 1]','t')])])]),FR('k','0','4','1',[O('v[k] & " "',false)])]},
+ {id:'palin',lv:2,t:['Palindroma','Palindrome'],g:['Leggi una parola e scrivi palindroma oppure non palindroma.','Read a word and write palindrome or not palindrome.'],h:['Confronta substr(w, i, 1) con substr(w, len(w) - 1 - i, 1) per ogni posizione.','Compare substr(w, i, 1) with substr(w, len(w) - 1 - i, 1) at every position.'],tests:[{i:['ana'],o:{it:'palindroma',en:'palindrome'}},{i:['casa'],o:{it:'non palindroma',en:'not palindrome'}},{i:['otto'],o:{it:'palindroma',en:'palindrome'}},{i:['a'],o:{it:'palindroma',en:'palindrome'}}],sol:()=>[D('String','w'),D('Boolean','ok'),I('w'),A('ok','true'),FR('i','0','len(w) - 1','1',[IF('substr(w, i, 1) != substr(w, len(w) - 1 - i, 1)',[A('ok','false')])]),IF('ok',[O(L2('"palindroma"','"palindrome"'))],[O(L2('"non palindroma"','"not palindrome"'))])]},
+];
+const chOut=o=>typeof o==='string'?o:o[LANG];
+const chNrm=s=>String(s).trim().replace(/\s+/g,' ').toLowerCase();
+async function runTests(p,ch){
+  const res=[];
+  for(const tc of ch.tests){
+    const want=chOut(tc.o);let got='',err='';const ins=[...tc.i];
+    const io={out:x=>{got+=x;if(got.length>20000)throw new RunErr('output')},input:async()=>{if(!ins.length)throw new RunErr(t('ui.chNoInput'));return ins.shift()}};
+    const c={steps:0,tick:async()=>{if(++c.steps>400000)throw new RunErr(t('ui.chLoops'))}};
+    try{await execute(p,io,c)}catch(e){if(e instanceof RunErr)err=e.message;else throw e}
+    res.push({i:tc.i,want,got:got.trim(),err,ok:!err&&chNrm(got)===chNrm(want)});
+  }
+  return res;
+}
+
+/* ---------- generatori di codice ---------- */
+const VT={Integer:'int',Real:'real',String:'str',Boolean:'bool'};
+const mix2=t=>t[0]==='real'||t[1]==='real'?'real':'int';
+const FT={
+  sqrt:()=>'real',sin:()=>'real',cos:()=>'real',tan:()=>'real',log:()=>'real',log10:()=>'real',exp:()=>'real',pow:()=>'real',num:()=>'real',
+  abs:t=>t[0]==='real'?'real':'int',
+  floor:()=>'int',ceil:()=>'int',round:()=>'int',int:()=>'int',sign:()=>'int',random:()=>'int',len:()=>'int',
+  min:mix2,max:mix2,upper:()=>'str',lower:()=>'str',substr:()=>'str',str:()=>'str'
+};
+function tyOf(a,T){
+  switch(a.k){
+    case 'num':return Number.isInteger(a.v)?'int':'real';
+    case 'str':return 'str';
+    case 'bool':return 'bool';
+    case 'var':return T[a.n]?T[a.n].t:(a.n==='pi'?'real':'int');
+    case 'idx':return T[a.n]?T[a.n].t:'int';
+    case 'un':return a.op==='not'?'bool':tyOf(a.e,T);
+    case 'call':return FT[a.f](a.a.map(x=>tyOf(x,T)));
+    case 'bin':{
+      const o=a.op;
+      if(['and','or','==','!=','<','>','<=','>='].includes(o))return 'bool';
+      if(o==='&')return 'str';
+      const l=tyOf(a.l,T),r=tyOf(a.r,T);
+      if(o==='+'&&(l==='str'||r==='str'))return 'str';
+      if(o==='/'||o==='^')return 'real';
+      return l==='int'&&r==='int'?'int':'real';
+    }
+  }
+}
+const REALARGS=new Set(['sqrt','sin','cos','tan','log','log10','exp','floor','ceil','round','pow']);
+const dq=s=>JSON.stringify(s);
+const MATHF=new Set(['sqrt','sin','cos','tan','log','log10','exp','floor','ceil','round','abs','sign']);
+
+/* base per i linguaggi con graffe e punto e virgola */
+const CLIKE={
+  semi:';',ind:'    ',cmt:'//',base:0,autoStr:false,join:' + ',pass:null,strictOps:false,strictFn:false,
+  ops:{and:'&&',or:'||',not:'!',eq:'==',ne:'!='},
+  v:n=>n,lit:dq,bool:b=>b?'true':'false',
+  toInt:c=>`(int) (${c})`,toReal:c=>c,toStr:c=>`String(${c})`,strPart:c=>c,
+  div(l,r,lt,rt){return lt==='int'&&rt==='int'?`(double) ${l} / ${r}`:`${l} / ${r}`},
+  mod(l,r){return `${l} % ${r}`},
+  pow(l,r){return `Math.pow(${l}, ${r})`},
+  ifO:c=>`if (${c}) {`,els:'} else {',end:'}',whO:c=>`while (${c}) {`,
+  doO:'do {',doC:c=>[[0,`} while (${c});`]],
+  loopDecl(f){return f.isNew?this.tn[f.vt]+' ':''},
+  forO(f){return {open:[[0,`for (${this.loopDecl(f)}${f.v} = ${f.fc}; ${f.cond}; ${f.v} += ${f.sc}) {`]],close:[[0,'}']]}},
+  assign(tg,v){return [`${tg.code} = ${v};`]},
+  decl(nm,t,sz){return [sz?this.arr(nm,t,sz):`${this.tn[t]} ${nm} = ${this.dv[t]};`]},
+  fnNeed(){},piNeed(){},
+};
+const LG={};
+
+/* ---------------- JavaScript ---------------- */
+LG.js=Object.assign({},CLIKE,{
+  id:'js',name:'JavaScript',file:'main.js',run:'node main.js',ind:'  ',
+  ops:{and:'&&',or:'||',not:'!',eq:'===',ne:'!=='},autoStr:'left',
+  dv:{int:'0',real:'0',str:'""',bool:'false'},
+  pi:()=>'Math.PI',toInt:c=>`Math.trunc(${c})`,div:(l,r)=>`${l} / ${r}`,
+  loopDecl(f){return f.isNew?'let ':''},
+  decl(nm,t,sz){return [sz?`let ${nm} = new Array(${sz}).fill(${this.dv[t]});`:`let ${nm} = ${this.dv[t]};`]},
+  arrLen:v=>`${v}.length`,
+  fn:{sqrt:'Math.sqrt($1)',abs:'Math.abs($1)',sin:'Math.sin($1)',cos:'Math.cos($1)',tan:'Math.tan($1)',log:'Math.log($1)',log10:'Math.log10($1)',exp:'Math.exp($1)',floor:'Math.floor($1)',ceil:'Math.ceil($1)',round:'Math.round($1)',int:'Math.trunc($1)',sign:'Math.sign($1)',pow:'Math.pow($1, $2)',min:'Math.min($1, $2)',max:'Math.max($1, $2)',random:'Math.floor(Math.random() * $1)',len:'$1.length',upper:'$1.toUpperCase()',lower:'$1.toLowerCase()',substr:'$1.substr($2, $3)',str:'String($1)',num:'Number($1)'},
+  input(tg,pr,X){
+    X.need.input=1;const a=`ask(${dq(pr)})`;
+    const c=tg.t==='int'?`parseInt(${a}, 10)`:tg.t==='real'?`parseFloat(${a}.replace(',', '.'))`:tg.t==='bool'?`['true', 'vero', '1'].includes(${a}.toLowerCase())`:a;
+    return [`${tg.code} = ${c};`];
+  },
+  output(X,a,nl){const c=X.E(a,true);return [nl?`console.log(${c});`:`process.stdout.write(String(${c}));`]},
+  pre(need,hdr){
+    const o=[hdr];
+    if(need.input)o.push('','const _lines = require(\'fs\').readFileSync(0, \'utf8\').split(\'\\n\');','let _next = 0;','const ask = (prompt) => {','  process.stdout.write(prompt);','  return (_lines[_next++] || \'\').trim();','};');
+    return o.concat(['']);
+  },
+  post:()=>[],
+  notes:[['Gira con Node.js. L\'Input legge dallo standard input: da terminale chiudi l\'immissione con Ctrl+D.','Runs on Node.js. Input reads from standard input: in a terminal, end the input with Ctrl+D.']],
+});
+
+/* ---------------- Python ---------------- */
+LG.py=Object.assign({},CLIKE,{
+  id:'py',name:'Python',file:'main.py',run:'python3 main.py',ind:'    ',cmt:'#',semi:'',
+  ops:{and:'and',or:'or',not:'not ',eq:'==',ne:'!='},
+  dv:{int:'0',real:'0.0',str:'""',bool:'False'},
+  bool:b=>b?'True':'False',pi:()=>'math.pi',piNeed(n){n.math=1},
+  toInt:c=>`int(${c})`,toStr:c=>`str(${c})`,
+  div:(l,r)=>`${l} / ${r}`,
+  mod(l,r){return `int(math.fmod(${l}, ${r}))`},modNeed(n){n.math=1},
+  pow:(l,r)=>`${l} ** ${r}`,
+  pass:'pass',
+  ifO:c=>`if ${c}:`,els:'else:',end:null,whO:c=>`while ${c}:`,
+  doO:'while True:',doC:c=>[[1,`if not (${c}):`],[2,'break']],
+  decl(nm,t,sz){return [sz?`${nm} = [${this.dv[t]}] * ${sz}`:`${nm} = ${this.dv[t]}`]},
+  assign(tg,v){return [`${tg.code} = ${v}`]},
+  forO(f){
+    if(f.vt==='real')return {open:[[0,`${f.v} = ${f.fc}`],[0,`while ${f.cond}:`]],close:[[1,`${f.v} += ${f.sc}`]]};
+    const tc=f.tt==='real'?`int(${f.tc})`:f.tc;
+    const stop=f.lit!==null?(f.lit<0?`${tc} - 1`:`${tc} + 1`):`${tc} + (1 if ${f.sc} > 0 else -1)`;
+    return {open:[[0,`for ${f.v} in range(${f.fc}, ${stop}${f.lit===1?'':', '+f.sc}):`]],close:[]};
+  },
+  arrLen:v=>`len(${v})`,
+  fnNeed(n,need){if(MATHF.has(n)&&n!=='abs'&&n!=='sign')need.math=1;if(n==='random')need.random=1},
+  fn:{sqrt:'math.sqrt($1)',abs:'abs($1)',sin:'math.sin($1)',cos:'math.cos($1)',tan:'math.tan($1)',log:'math.log($1)',log10:'math.log10($1)',exp:'math.exp($1)',floor:'math.floor($1)',ceil:'math.ceil($1)',round:'math.floor($1 + 0.5)',int:'int($1)',sign:'((($1) > 0) - (($1) < 0))',pow:'($1 ** $2)',min:'min($1, $2)',max:'max($1, $2)',random:'random.randrange($1)',len:'len($1)',upper:'$1.upper()',lower:'$1.lower()',substr:'$1[$2:$2 + $3]',str:'str($1)',num:'float($1)'},
+  input(tg,pr){
+    const a=`input(${dq(pr)})`;
+    const c=tg.t==='int'?`int(${a})`:tg.t==='real'?`float(${a}.replace(",", "."))`:tg.t==='bool'?`${a}.strip().lower() in ("true", "vero", "1")`:a;
+    return [`${tg.code} = ${c}`];
+  },
+  output(X,a,nl){const c=X.E(a,true);return [nl?`print(${c})`:`print(${c}, end="")`]},
+  pre(need,hdr){const o=[hdr];const im=[];if(need.math)im.push('import math');if(need.random)im.push('import random');if(im.length)o.push('',...im);return o.concat([''])},
+  post:()=>[],
+  notes:[['Il resto della divisione con numeri negativi segue il segno del dividendo, come nel diagramma.','The remainder with negative numbers follows the sign of the dividend, as in the diagram.']],
+});
+
+/* ---------------- Java ---------------- */
+LG.java=Object.assign({},CLIKE,{
+  id:'java',name:'Java',file:'Main.java',run:'javac Main.java && java Main',base:2,autoStr:'left',
+  tn:{int:'int',real:'double',str:'String',bool:'boolean'},dv:{int:'0',real:'0.0',str:'""',bool:'false'},
+  pi:()=>'Math.PI',toStr:c=>`String.valueOf(${c})`,
+  cmpStr(o,l,r){return o==='=='?`${l}.equals(${r})`:o==='!='?`!${l}.equals(${r})`:`${l}.compareTo(${r}) ${o} 0`},
+  arr(nm,t,sz){
+    if(t==='str')return [`String[] ${nm} = new String[${sz}];`,`Arrays.fill(${nm}, "");`];
+    return [`${this.tn[t]}[] ${nm} = new ${this.tn[t]}[${sz}];`];
+  },
+  arrLen:v=>`${v}.length`,
+  fn:{sqrt:'Math.sqrt($1)',abs:'Math.abs($1)',sin:'Math.sin($1)',cos:'Math.cos($1)',tan:'Math.tan($1)',log:'Math.log($1)',log10:'Math.log10($1)',exp:'Math.exp($1)',floor:'(int) Math.floor($1)',ceil:'(int) Math.ceil($1)',round:'(int) Math.floor($1 + 0.5)',int:'(int) ($1)',sign:'(int) Math.signum($1)',pow:'Math.pow($1, $2)',min:'Math.min($1, $2)',max:'Math.max($1, $2)',random:'(int) (Math.random() * $1)',len:'$1.length()',upper:'$1.toUpperCase()',lower:'$1.toLowerCase()',substr:'$1.substring($2, $2 + $3)',str:'String.valueOf($1)',num:'Double.parseDouble($1)'},
+  input(tg,pr,X){
+    X.need.input=1;
+    const a='sc.nextLine().trim()';
+    const c=tg.t==='int'?`Integer.parseInt(${a})`:tg.t==='real'?`Double.parseDouble(${a}.replace(',', '.'))`:tg.t==='bool'?`Boolean.parseBoolean(${a})`:'sc.nextLine()';
+    return [`System.out.print(${dq(pr)});`,`${tg.code} = ${c};`];
+  },
+  output(X,a,nl){return [`System.out.${nl?'println':'print'}(${X.E(a,true)});`]},
+  pre(need,hdr){return [hdr,'','import java.util.*;','','public class Main {','    public static void main(String[] args) {',...(need.input?['        Scanner sc = new Scanner(System.in);']:[])]},
+  post:()=>['    }','}'],
+  notes:[],
+});
+
+/* ---------------- C ---------------- */
+function cFmt(X,a){
+  const parts=X.flat(a);let f='';const args=[];
+  for(const p of parts){
+    const ty=X.ty(p);
+    if(p.k==='str')f+=dq(p.v).slice(1,-1).replace(/%/g,'%%');
+    else if(ty==='str'){f+='%s';args.push(X.E(p,true))}
+    else if(ty==='int'){f+='%d';args.push(X.E(p,true))}
+    else if(ty==='real'){f+='%g';args.push(X.E(p,true))}
+    else{f+='%s';args.push(`${X.E(p,false)} ? "true" : "false"`)}
+  }
+  return {f,args};
+}
+LG.c=Object.assign({},CLIKE,{
+  id:'c',name:'C',file:'main.c',run:'gcc main.c -o main -lm && ./main',base:1,
+  tn:{int:'int',real:'double',str:'char',bool:'bool'},dv:{int:'0',real:'0.0',str:'""',bool:'false'},
+  pi:()=>'3.14159265358979323846',
+  join:null,
+  cmpStr(o,l,r){return `strcmp(${l}, ${r}) ${o==='=='?'==':o==='!='?'!=':o} 0`},
+  mod:(l,r,real)=>real?`fmod(${l}, ${r})`:`${l} % ${r}`,
+  pow:(l,r)=>`pow(${l}, ${r})`,
+  decl(nm,t,sz,szAst,X){
+    if(sz){
+      if(t==='str'){X.warn(M('Gli array di stringhe non sono tradotti in C.','String arrays are not translated to C.'));return [`/* ${nm}: ${M('array di stringhe non supportato','string array not supported')} */`]}
+      if(szAst&&szAst.k==='num')return [`${this.tn[t]} ${nm}[${sz}] = {0};`];
+      return [`${this.tn[t]} ${nm}[${sz}];`,`memset(${nm}, 0, sizeof ${nm});`];
+    }
+    return [t==='str'?`char ${nm}[256] = "";`:`${this.tn[t]} ${nm} = ${this.dv[t]};`];
+  },
+  assign(tg,v,a,X){
+    if(tg.t==='str'){
+      if(tg.ast&&tg.ast.k==='idx'){X.warn(M('Array di stringhe non supportati in C.','String arrays are not supported in C.'));return [`/* ${tg.code} = ... */`]}
+      const {f,args}=cFmt(X,a||{k:'str',v:''});
+      return [`snprintf(${tg.code}, sizeof ${tg.code}, "${f}"${args.length?', '+args.join(', '):''});`];
+    }
+    return [`${tg.code} = ${v};`];
+  },
+  arrLen:v=>`(int) (sizeof(${v}) / sizeof(${v}[0]))`,
+  fnNeed(n,need){if(n==='random')need.rand=1},
+  fn:{sqrt:'sqrt($1)',abs:(a,t)=>t[0]==='int'?`abs(${a[0]})`:`fabs(${a[0]})`,sin:'sin($1)',cos:'cos($1)',tan:'tan($1)',log:'log($1)',log10:'log10($1)',exp:'exp($1)',floor:'(int) floor($1)',ceil:'(int) ceil($1)',round:'(int) floor($1 + 0.5)',int:'(int) ($1)',sign:'((($1) > 0) - (($1) < 0))',pow:'pow($1, $2)',min:'(($1) < ($2) ? ($1) : ($2))',max:'(($1) > ($2) ? ($1) : ($2))',random:'(rand() % ($1))',len:'(int) strlen($1)',upper:null,lower:null,substr:null,str:null,num:null},
+  input(tg,pr,X){
+    const o=[`printf(${dq(pr)});`];
+    if(tg.t==='str'){if(tg.ast&&tg.ast.k==='idx'){X.warn(M('Array di stringhe non supportati in C.','String arrays are not supported in C.'));return o}o.push(`scanf(" %255[^\\n]", ${tg.code});`)}
+    else if(tg.t==='int')o.push(`scanf("%d", &${tg.code});`);
+    else if(tg.t==='real')o.push(`scanf("%lf", &${tg.code});`);
+    else o.push(`{ char _t[16]; scanf("%15s", _t); ${tg.code} = (strcmp(_t, "true") == 0 || strcmp(_t, "1") == 0); }`);
+    return o;
+  },
+  output(X,a,nl){const {f,args}=cFmt(X,a);return [`printf("${f}${nl?'\\n':''}"${args.length?', '+args.join(', '):''});`]},
+  pre(need,hdr){return [hdr,'','#include <stdio.h>','#include <stdlib.h>','#include <string.h>','#include <stdbool.h>','#include <math.h>',...(need.rand?['#include <time.h>']:[]),'','int main(void) {',...(need.rand?['    srand((unsigned) time(NULL));']:[])]},
+  post:()=>['    return 0;','}'],
+  notes:[['Le stringhe sono array di 256 caratteri. Upper, lower, substr, str e num non sono tradotte. Il concatenamento è tradotto solo in Output e nelle assegnazioni a una String.','Strings are 256-character arrays. Upper, lower, substr, str and num are not translated. Concatenation is translated only in Output and in assignments to a String.']],
+});
+
+/* ---------------- C++ ---------------- */
+LG.cpp=Object.assign({},CLIKE,{
+  id:'cpp',name:'C++',file:'main.cpp',run:'g++ main.cpp -o main && ./main',base:1,
+  tn:{int:'int',real:'double',str:'std::string',bool:'bool'},dv:{int:'0',real:'0.0',str:'""',bool:'false'},
+  pi:()=>'3.14159265358979323846',
+  toStr:c=>`str(${c})`,strPart:c=>c[0]==='"'?`std::string(${c})`:c,
+  mod:(l,r,real)=>real?`std::fmod(${l}, ${r})`:`${l} % ${r}`,
+  pow:(l,r)=>`std::pow(${l}, ${r})`,
+  arr(nm,t,sz){return [`std::vector<${this.tn[t]}> ${nm}(${sz});`]},
+  arrLen:v=>`(int) ${v}.size()`,
+  fnNeed(n,need){if(n==='random')need.rand=1},
+  fn:{sqrt:'std::sqrt($1)',abs:'std::abs($1)',sin:'std::sin($1)',cos:'std::cos($1)',tan:'std::tan($1)',log:'std::log($1)',log10:'std::log10($1)',exp:'std::exp($1)',floor:'(int) std::floor($1)',ceil:'(int) std::ceil($1)',round:'(int) std::floor($1 + 0.5)',int:'(int) ($1)',sign:'((($1) > 0) - (($1) < 0))',pow:'std::pow($1, $2)',min:'(($1) < ($2) ? ($1) : ($2))',max:'(($1) > ($2) ? ($1) : ($2))',random:'(std::rand() % ($1))',len:'(int) $1.size()',upper:null,lower:null,substr:'$1.substr($2, $3)',str:'str($1)',num:'std::stod($1)'},
+  input(tg,pr){
+    const o=[`std::cout << ${dq(pr)};`];
+    if(tg.t==='str')o.push(`std::getline(std::cin >> std::ws, ${tg.code});`);
+    else if(tg.t==='bool')o.push(`std::cin >> std::boolalpha >> ${tg.code};`);
+    else o.push(`std::cin >> ${tg.code};`);
+    return o;
+  },
+  output(X,a,nl){X.need.out=1;return [`std::cout << ${X.E(a,false)}${nl?' << std::endl':''};`]},
+  pre(need,hdr){
+    const o=[hdr,'','#include <iostream>','#include <string>','#include <vector>','#include <cmath>','#include <cstdlib>',...(need.strh?['#include <sstream>']:[]),...(need.rand?['#include <ctime>']:[])];
+    if(need.strh)o.push('','template <typename T>','std::string str(const T& v) {','    std::ostringstream o;','    o << std::boolalpha << v;','    return o.str();','}');
+    o.push('','int main() {');
+    if(need.rand)o.push('    std::srand((unsigned) std::time(nullptr));');
+    return o;
+  },
+  post:()=>['    return 0;','}'],
+  notes:[['Upper e lower non sono tradotte. I Boolean si stampano come 1 o 0.','Upper and lower are not translated. Booleans print as 1 or 0.']],
+});
+
+/* ---------------- C# ---------------- */
+LG.cs=Object.assign({},CLIKE,{
+  id:'cs',name:'C#',file:'Program.cs',run:'dotnet run',base:2,autoStr:'left',
+  tn:{int:'int',real:'double',str:'string',bool:'bool'},dv:{int:'0',real:'0.0',str:'""',bool:'false'},
+  pi:()=>'Math.PI',toStr:c=>`Convert.ToString(${c})`,
+  cmpStr(o,l,r){return o==='=='||o==='!='?`${l} ${o} ${r}`:`string.CompareOrdinal(${l}, ${r}) ${o} 0`},
+  arr(nm,t,sz){
+    if(t==='str')return [`string[] ${nm} = new string[${sz}];`,`Array.Fill(${nm}, "");`];
+    return [`${this.tn[t]}[] ${nm} = new ${this.tn[t]}[${sz}];`];
+  },
+  arrLen:v=>`${v}.Length`,
+  pow:(l,r)=>`Math.Pow(${l}, ${r})`,
+  fnNeed(n,need){if(n==='random')need.rng=1},
+  fn:{sqrt:'Math.Sqrt($1)',abs:'Math.Abs($1)',sin:'Math.Sin($1)',cos:'Math.Cos($1)',tan:'Math.Tan($1)',log:'Math.Log($1)',log10:'Math.Log10($1)',exp:'Math.Exp($1)',floor:'(int) Math.Floor($1)',ceil:'(int) Math.Ceiling($1)',round:'(int) Math.Floor($1 + 0.5)',int:'(int) ($1)',sign:'Math.Sign($1)',pow:'Math.Pow($1, $2)',min:'Math.Min($1, $2)',max:'Math.Max($1, $2)',random:'rng.Next($1)',len:'$1.Length',upper:'$1.ToUpper()',lower:'$1.ToLower()',substr:'$1.Substring($2, $3)',str:'Convert.ToString($1)',num:'double.Parse($1)'},
+  input(tg,pr){
+    const a='Console.ReadLine()';
+    const c=tg.t==='int'?`int.Parse(${a})`:tg.t==='real'?`double.Parse(${a}.Replace(',', '.'), System.Globalization.CultureInfo.InvariantCulture)`:tg.t==='bool'?`bool.Parse(${a})`:`${a}`;
+    return [`Console.Write(${dq(pr)});`,`${tg.code} = ${c};`];
+  },
+  output(X,a,nl){return [`Console.${nl?'WriteLine':'Write'}(${X.E(a,true)});`]},
+  pre(need,hdr){return [hdr,'','using System;','','class Program {','    static void Main() {',...(need.rng?['        Random rng = new Random();']:[])]},
+  post:()=>['    }','}'],
+  notes:[['Non provato con un compilatore: usa un progetto console .NET (dotnet new console) e sostituisci Program.cs.','Not tested with a compiler: use a .NET console project (dotnet new console) and replace Program.cs.']],
+});
+
+/* ---------------- Go ---------------- */
+LG.go=Object.assign({},CLIKE,{
+  id:'go',name:'Go',file:'main.go',run:'go run main.go',ind:'\t',base:1,semi:'',strictOps:true,strictFn:true,
+  tn:{int:'int',real:'float64',str:'string',bool:'bool'},dv:{int:'0',real:'0.0',str:'""',bool:'false'},
+  pi:()=>'math.Pi',piNeed(n){n.math=1},
+  toInt:(c,n)=>{n.math=1;return `int(math.Trunc(${c}))`},toReal:c=>`float64(${c})`,toStr:(c,t,n)=>{n.fmt=1;return `fmt.Sprint(${c})`},
+  div:(l,r,lt,rt)=>`${lt==='int'?`float64(${l})`:l} / ${rt==='int'?`float64(${r})`:r}`,
+  mod:(l,r,real,lt,rt)=>real?`math.Mod(${lt==='int'?`float64(${l})`:l}, ${rt==='int'?`float64(${r})`:r})`:`${l} % ${r}`,modNeed(n,real){if(real)n.math=1},
+  pow:(l,r)=>`math.Pow(${l}, ${r})`,powNeed(n){n.math=1},
+  ifO:c=>`if ${c} {`,whO:c=>`for ${c} {`,
+  doO:'for {',doC:c=>[[1,`if !(${c}) {`],[2,'break'],[1,'}'],[0,'}']],
+  forO(f){return {open:[[0,`for ${f.v} ${f.isNew?':=':'='} ${f.fc}; ${f.cond}; ${f.v} += ${f.sc} {`]],close:[[0,'}']]}},
+  assign(tg,v){return [`${tg.code} = ${v}`]},
+  decl(nm,t,sz){return sz?[`${nm} := make([]${this.tn[t]}, ${sz})`,`_ = ${nm}`]:[`var ${nm} ${this.tn[t]}`,`_ = ${nm}`]},
+  arrLen:v=>`len(${v})`,
+  fnNeed(n,need){if((MATHF.has(n)&&n!=='sign')||n==='int')need.math=1;if(n==='random')need.rand=1;if(n==='upper'||n==='lower')need.strings=1;if(n==='str')need.fmt=1},
+  fn:{sqrt:'math.Sqrt($1)',abs:(a,t)=>t[0]==='int'?`int(math.Abs(float64(${a[0]})))`:`math.Abs(${a[0]})`,sin:'math.Sin($1)',cos:'math.Cos($1)',tan:'math.Tan($1)',log:'math.Log($1)',log10:'math.Log10($1)',exp:'math.Exp($1)',floor:'int(math.Floor($1))',ceil:'int(math.Ceil($1))',round:'int(math.Floor($1 + 0.5))',int:'int(math.Trunc($1))',sign:null,pow:'math.Pow($1, $2)',min:'min($1, $2)',max:'max($1, $2)',random:'rand.Intn($1)',len:'len($1)',upper:'strings.ToUpper($1)',lower:'strings.ToLower($1)',substr:'$1[$2:$2+$3]',str:'fmt.Sprint($1)',num:null},
+  input(tg,pr,X){
+    const n=X.need;n.fmt=1;n.bufio=1;n.os=1;
+    const o=[`fmt.Print(${dq(pr)})`,'in.Scan()'];
+    if(tg.t==='str')o.push(`${tg.code} = in.Text()`);
+    else{
+      n.strconv=1;n.strings=1;const s='strings.TrimSpace(in.Text())';
+      if(tg.t==='int')o.push(`${tg.code}, _ = strconv.Atoi(${s})`);
+      else if(tg.t==='real')o.push(`${tg.code}, _ = strconv.ParseFloat(strings.Replace(${s}, ",", ".", 1), 64)`);
+      else o.push(`${tg.code}, _ = strconv.ParseBool(${s})`);
+    }
+    return o;
+  },
+  output(X,a,nl){X.need.fmt=1;return [`fmt.${nl?'Println':'Print'}(${X.E(a,true)})`]},
+  pre(need,hdr){
+    const im=[];
+    if(need.bufio)im.push('bufio');if(need.fmt)im.push('fmt');if(need.math)im.push('math');if(need.rand)im.push('math/rand');if(need.os)im.push('os');if(need.strconv)im.push('strconv');if(need.strings)im.push('strings');
+    const o=[hdr,'','package main',''];
+    if(im.length)o.push('import (',...im.map(x=>'\t"'+x+'"'),')','');
+    o.push('func main() {');
+    if(need.bufio)o.push('\tin := bufio.NewScanner(os.Stdin)');
+    return o;
+  },
+  post:()=>['}'],
+  notes:[['Richiede Go 1.21 o successivo (usa min e max predefinite). La funzione sign e num non sono tradotte.','Needs Go 1.21 or later (uses the built-in min and max). The sign and num functions are not translated.']],
+});
+
+/* ---------------- PHP ---------------- */
+LG.php=Object.assign({},CLIKE,{
+  id:'php',name:'PHP',file:'main.php',run:'php main.php',autoStr:'all',join:' . ',
+  ops:{and:'&&',or:'||',not:'!',eq:'==',ne:'!='},
+  v:n=>'$'+n,lit:s=>dq(s).replace(/\$/g,'\\$'),
+  dv:{int:'0',real:'0.0',str:'""',bool:'false'},pi:()=>'M_PI',
+  toInt:c=>`(int) (${c})`,toStr:c=>`(string) (${c})`,
+  mod:(l,r,real)=>real?`fmod(${l}, ${r})`:`${l} % ${r}`,
+  pow:(l,r)=>`${l} ** ${r}`,
+  div:(l,r)=>`${l} / ${r}`,
+  loopDecl(){return ''},
+  decl(nm,t,sz){return [sz?`$${nm} = array_fill(0, ${sz}, ${this.dv[t]});`:`$${nm} = ${this.dv[t]};`]},
+  arrLen:v=>`count(${v})`,
+  fn:{sqrt:'sqrt($1)',abs:'abs($1)',sin:'sin($1)',cos:'cos($1)',tan:'tan($1)',log:'log($1)',log10:'log10($1)',exp:'exp($1)',floor:'(int) floor($1)',ceil:'(int) ceil($1)',round:'(int) floor($1 + 0.5)',int:'(int) ($1)',sign:'(($1) <=> 0)',pow:'($1 ** $2)',min:'min($1, $2)',max:'max($1, $2)',random:'random_int(0, $1 - 1)',len:'strlen($1)',upper:'strtoupper($1)',lower:'strtolower($1)',substr:'substr($1, $2, $3)',str:'(string) ($1)',num:'(float) ($1)'},
+  input(tg,pr){
+    const a='trim(fgets(STDIN))';
+    const c=tg.t==='int'?`(int) ${a}`:tg.t==='real'?`(float) str_replace(',', '.', ${a})`:tg.t==='bool'?`filter_var(${a}, FILTER_VALIDATE_BOOLEAN)`:a;
+    return [`echo ${dq(pr)};`,`${tg.code} = ${c};`];
+  },
+  output(X,a,nl){const c=X.E(a,true);return [nl?`echo ${c}, PHP_EOL;`:`echo ${c};`]},
+  pre(need,hdr){return ['<?php',hdr,'']},
+  post:()=>[],
+  notes:[['I Boolean si stampano come 1 (vero) o vuoto (falso).','Booleans print as 1 (true) or empty (false).']],
+});
+
+/* ---------------- Ruby ---------------- */
+LG.rb=Object.assign({},CLIKE,{
+  id:'rb',name:'Ruby',file:'main.rb',run:'ruby main.rb',ind:'  ',cmt:'#',semi:'',
+  dv:{int:'0',real:'0.0',str:'""',bool:'false'},pi:()=>'Math::PI',
+  toInt:c=>`(${c}).to_i`,toStr:c=>`(${c}).to_s`,
+  div:(l,r,lt,rt)=>lt==='int'&&rt==='int'?`${l}.fdiv(${r})`:`${l} / ${r}`,
+  mod:(l,r)=>`${l}.remainder(${r})`,
+  pow:(l,r)=>`${l} ** ${r}`,
+  ifO:c=>`if ${c}`,els:'else',end:'end',whO:c=>`while ${c}`,
+  doO:'loop do',doC:c=>[[1,`break unless (${c})`],[0,'end']],
+  forO(f){return {open:[[0,`(${f.fc}).step(${f.tc}, ${f.sc}) do |${f.v}|`]],close:[[0,'end']]}},
+  assign(tg,v){return [`${tg.code} = ${v}`]},
+  decl(nm,t,sz){return [sz?`${nm} = Array.new(${sz}, ${this.dv[t]})`:`${nm} = ${this.dv[t]}`]},
+  arrLen:v=>`${v}.length`,
+  fn:{sqrt:'Math.sqrt($1)',abs:'($1).abs',sin:'Math.sin($1)',cos:'Math.cos($1)',tan:'Math.tan($1)',log:'Math.log($1)',log10:'Math.log10($1)',exp:'Math.exp($1)',floor:'($1).floor',ceil:'($1).ceil',round:'(($1) + 0.5).floor',int:'($1).to_i',sign:'(($1) <=> 0)',pow:'($1 ** $2)',min:'[$1, $2].min',max:'[$1, $2].max',random:'rand($1)',len:'$1.length',upper:'$1.upcase',lower:'$1.downcase',substr:'$1[$2, $3]',str:'($1).to_s',num:'($1).to_f'},
+  input(tg,pr){
+    const c=tg.t==='int'?'gets.to_i':tg.t==='real'?'gets.tr(",", ".").to_f':tg.t==='bool'?'["true", "vero", "1"].include?(gets.strip.downcase)':'gets.chomp';
+    return [`print ${dq(pr)}`,`${tg.code} = ${c}`];
+  },
+  output(X,a,nl){return [`${nl?'puts':'print'} ${X.E(a,true)}`]},
+  pre(need,hdr){return [hdr,'']},
+  post:()=>[],
+  notes:[['Nel ciclo For la variabile del contatore esiste solo dentro il ciclo.','In a For loop the counter variable exists only inside the loop.']],
+});
+
+/* ---------------- Kotlin ---------------- */
+LG.kt=Object.assign({},CLIKE,{
+  id:'kt',name:'Kotlin',file:'main.kt',run:'kotlinc main.kt -include-runtime -d main.jar && java -jar main.jar',base:1,semi:'',autoStr:'left',strictFn:true,
+  tn:{int:'Int',real:'Double',str:'String',bool:'Boolean'},dv:{int:'0',real:'0.0',str:'""',bool:'false'},
+  lit:s=>dq(s).replace(/\$/g,'\\$'),
+  pi:()=>'PI',piNeed(n){n.math=1},
+  toInt:c=>`(${c}).toInt()`,toReal:c=>`(${c}).toDouble()`,toStr:c=>`(${c}).toString()`,
+  div:(l,r,lt,rt)=>lt==='int'&&rt==='int'?`${l}.toDouble() / ${r}`:`${l} / ${r}`,
+  pow:(l,r)=>`Math.pow(${l}, ${r})`,
+  doC:c=>[[0,`} while (${c})`]],
+  forO(f){
+    const ok=f.vt==='int'&&f.ft==='int'&&f.tt==='int'&&f.lit!==null;
+    if(ok){
+      const [a,b]=f.lit>0?['..',f.lit]:[' downTo ',-f.lit];
+      return {open:[[0,`for (${f.v} in ${f.fc}${a}${f.tc}${b===1?'':' step '+b}) {`]],close:[[0,'}']]};
+    }
+    return {open:[[0,`${f.isNew?'var ':''}${f.v}${f.isNew?': '+this.tn[f.vt]:''} = ${f.fc}`],[0,`while (${f.cond}) {`]],close:[[1,`${f.v} += ${f.sc}`],[0,'}']]};
+  },
+  assign(tg,v){return [`${tg.code} = ${v}`]},
+  decl(nm,t,sz){
+    if(!sz)return [`var ${nm}: ${this.tn[t]} = ${this.dv[t]}`];
+    return [t==='str'?`var ${nm} = Array(${sz}) { "" }`:`var ${nm} = ${this.tn[t]}Array(${sz})`];
+  },
+  arrLen:v=>`${v}.size`,
+  fnNeed(n,need){if(MATHF.has(n))need.math=1},
+  fn:{sqrt:'sqrt($1)',abs:'abs($1)',sin:'sin($1)',cos:'cos($1)',tan:'tan($1)',log:'ln($1)',log10:'log10($1)',exp:'exp($1)',floor:'floor($1).toInt()',ceil:'ceil($1).toInt()',round:'floor($1 + 0.5).toInt()',int:'($1).toInt()',sign:'sign(($1).toDouble()).toInt()',pow:'Math.pow($1, $2)',min:'minOf($1, $2)',max:'maxOf($1, $2)',random:'(0 until $1).random()',len:'$1.length',upper:'$1.uppercase()',lower:'$1.lowercase()',substr:'$1.substring($2, $2 + $3)',str:'($1).toString()',num:'($1).toDouble()'},
+  input(tg,pr){
+    const a='readLine()!!.trim()';
+    const c=tg.t==='int'?`${a}.toInt()`:tg.t==='real'?`${a}.replace(',', '.').toDouble()`:tg.t==='bool'?`${a}.lowercase() in listOf("true", "vero", "1")`:'readLine()!!';
+    return [`print(${dq(pr)})`,`${tg.code} = ${c}`];
+  },
+  output(X,a,nl){return [`${nl?'println':'print'}(${X.E(a,true)})`]},
+  pre(need,hdr){return [hdr,'',...(need.math?['import kotlin.math.*','']:[]),'fun main() {']},
+  post:()=>['}'],
+  notes:[['Non provato con un compilatore.','Not tested with a compiler.']],
+});
+
+/* ---------------- Swift ---------------- */
+LG.swift=Object.assign({},CLIKE,{
+  id:'swift',name:'Swift',file:'main.swift',run:'swiftc main.swift -o main && ./main',semi:'',autoStr:false,strictOps:true,strictFn:true,
+  tn:{int:'Int',real:'Double',str:'String',bool:'Bool'},dv:{int:'0',real:'0.0',str:'""',bool:'false'},
+  pi:()=>'Double.pi',toInt:c=>`Int(${c})`,toReal:c=>`Double(${c})`,toStr:c=>`String(${c})`,
+  div:(l,r,lt,rt)=>`${lt==='int'?`Double(${l})`:l} / ${rt==='int'?`Double(${r})`:r}`,
+  mod:(l,r,real,lt,rt)=>real?`${lt==='int'?`Double(${l})`:l}.truncatingRemainder(dividingBy: ${rt==='int'?`Double(${r})`:r})`:`${l} % ${r}`,
+  pow:(l,r)=>`pow(${l}, ${r})`,
+  ifO:c=>`if ${c} {`,whO:c=>`while ${c} {`,
+  doO:'repeat {',doC:c=>[[0,`} while ${c}`]],
+  forO(f){return {open:[[0,`for ${f.v} in stride(from: ${f.fc}, through: ${f.tc}, by: ${f.sc}) {`]],close:[[0,'}']]}},
+  assign(tg,v){return [`${tg.code} = ${v}`]},
+  decl(nm,t,sz){return [sz?`var ${nm} = [${this.tn[t]}](repeating: ${this.dv[t]}, count: ${sz})`:`var ${nm}: ${this.tn[t]} = ${this.dv[t]}`]},
+  arrLen:v=>`${v}.count`,
+  fn:{sqrt:'sqrt($1)',abs:'abs($1)',sin:'sin($1)',cos:'cos($1)',tan:'tan($1)',log:'log($1)',log10:'log10($1)',exp:'exp($1)',floor:'Int(floor($1))',ceil:'Int(ceil($1))',round:'Int(floor($1 + 0.5))',int:'Int($1)',sign:'(($1) > 0 ? 1 : (($1) < 0 ? -1 : 0))',pow:'pow($1, $2)',min:'min($1, $2)',max:'max($1, $2)',random:'Int.random(in: 0..<$1)',len:'$1.count',upper:'$1.uppercased()',lower:'$1.lowercased()',substr:'String($1.dropFirst($2).prefix($3))',str:'String($1)',num:'(Double($1) ?? 0)'},
+  input(tg,pr){
+    const a='(readLine() ?? "").trimmingCharacters(in: .whitespaces)';
+    const c=tg.t==='int'?`Int(${a}) ?? 0`:tg.t==='real'?`Double(${a}.replacingOccurrences(of: ",", with: ".")) ?? 0`:tg.t==='bool'?`["true", "vero", "1"].contains(${a}.lowercased())`:'readLine() ?? ""';
+    return [`print(${dq(pr)}, terminator: "")`,`${tg.code} = ${c}`];
+  },
+  output(X,a,nl){return [nl?`print(${X.E(a,true)})`:`print(${X.E(a,true)}, terminator: "")`]},
+  pre(need,hdr){return [hdr,'','import Foundation','']},
+  post:()=>[],
+  notes:[['Non provato con un compilatore.','Not tested with a compiler.']],
+});
+
+const LANGS=['js','py','java','c','cpp','cs','go','php','rb','kt','swift'];
+const TESTED=['js','py','java','c','cpp','go','php','rb'];
+
+/* ---------------- motore di generazione ---------------- */
+function gen(prog,id){
+  const L=LG[id],T={},decl=new Set(),warns=[],need={};
+  const warn=m=>{if(!warns.includes(m))warns.push(m)};
+  walk(prog.body,n=>{
+    if(n.type==='declare'){const nm=(n.name||'').trim();if(IDENT.test(nm)){T[nm]={t:VT[n.vt]||'int',arr:!!(n.size||'').trim()};decl.add(nm)}}
+  });
+  const P0=src=>{const r=parseC(src||'');return r.ast||null};
+  walk(prog.body,n=>{
+    if(n.type==='for'){
+      const v=(n.v||'').trim();
+      if(IDENT.test(v)&&!T[v]){const f=P0(n.from),s=P0((n.step||'').trim()||'1');T[v]={t:(f&&s&&tyOf(f,T)==='int'&&tyOf(s,T)==='int')?'int':'real',arr:false}}
+    }
+  });
+  const ty=a=>tyOf(a,T);
+  const A_=src=>{const r=parseC(src||'');if(r.err){warn(M('Espressione non valida','Invalid expression')+': '+(src||'')+' ('+r.err+')');return null}return r.ast};
+  const isCat=n=>n.k==='bin'&&(n.op==='&'||(n.op==='+'&&ty(n)==='str'));
+  const flat=n=>isCat(n)?[...flat(n.l),...flat(n.r)]:[n];
+  const coerceCode=(c,f,to)=>to==='int'&&f==='real'?L.toInt(c,need):to==='real'&&f==='int'?L.toReal(c):c;
+  const num2=(l,lt,r,rt)=>{
+    if(L.strictOps){if(lt==='int'&&rt==='real')l=L.toReal(l);else if(lt==='real'&&rt==='int')r=L.toReal(r)}
+    return [l,r];
+  };
+  function E(a,top){
+    switch(a.k){
+      case 'num':return String(a.v);
+      case 'str':return L.lit(a.v);
+      case 'bool':return L.bool(a.v);
+      case 'var':if(a.n==='pi'&&!T.pi){L.piNeed&&L.piNeed(need);return L.pi(need)}return L.v(a.n);
+      case 'idx':return L.v(a.n)+'['+E(a.i,true)+']';
+      case 'un':{
+        if(a.op==='not')return L.ops.not+E(a.e,false);
+        const s=E(a.e,false);return '-'+(s[0]==='-'?'('+s+')':s);
+      }
+      case 'call':return F(a);
+      case 'bin':return B(a,top);
+    }
+  }
+  function catStr(parts){
+    if(!L.join){warn(M('Il concatenamento di testi non è tradotto in '+L.name+' fuori da Output e dalle assegnazioni.','Text concatenation is not translated in '+L.name+' outside Output and assignments.'));return '0'}
+    const s=[];let acc=false;
+    for(const p of parts){
+      const t=ty(p),c=E(p,false);
+      if(t==='str'){acc=true;s.push(L.strPart(c))}
+      else if(L.autoStr==='all'||(L.autoStr==='left'&&acc))s.push(c);
+      else{need.strh=1;s.push(L.toStr(c,t,need));acc=true}
+    }
+    return s.join(L.join);
+  }
+  function B(a,top){
+    const o=a.op,lt=ty(a.l),rt=ty(a.r);
+    let s;
+    if(o==='and'||o==='or')s=E(a.l,false)+' '+L.ops[o]+' '+E(a.r,false);
+    else if(isCat(a))s=catStr(flat(a));
+    else if(o==='=='||o==='!='||o==='<'||o==='>'||o==='<='||o==='>='){
+      let l=E(a.l,false),r=E(a.r,false);
+      if(lt==='str'&&rt==='str'&&L.cmpStr)s=L.cmpStr(o,l,r);
+      else{
+        [l,r]=num2(l,lt,r,rt);
+        const op=o==='=='?L.ops.eq:o==='!='?L.ops.ne:o;
+        s=l+' '+op+' '+r;
+      }
+    }
+    else if(o==='/')s=L.div(E(a.l,false),E(a.r,false),lt,rt);
+    else if(o==='%'){const real=lt==='real'||rt==='real';L.modNeed&&L.modNeed(need,real);s=L.mod(E(a.l,false),E(a.r,false),real,lt,rt)}
+    else if(o==='^'){
+      let l=E(a.l,false),r=E(a.r,false);
+      if(L.strictOps||L.strictFn){if(lt==='int')l=L.toReal(l);if(rt==='int')r=L.toReal(r)}
+      L.powNeed&&L.powNeed(need);
+      s=L.pow(l,r);
+    }
+    else{const [l,r]=num2(E(a.l,false),lt,E(a.r,false),rt);s=l+' '+o+' '+r}
+    return top?s:'('+s+')';
+  }
+  function F(a){
+    const name=a.f,ats=a.a.map(ty);
+    if(name==='len'&&a.a[0].k==='var'&&T[a.a[0].n]&&T[a.a[0].n].arr)return L.arrLen(L.v(a.a[0].n));
+    let args=a.a.map(x=>E(x,true));
+    if(L.strictFn&&REALARGS.has(name))args=args.map((c,i)=>ats[i]==='int'?L.toReal(c):c);
+    const tpl=L.fn[name];
+    if(tpl==null){warn(M(name+'() non è tradotta in '+L.name+'.',name+'() is not translated in '+L.name+'.'));return '0 /* '+name+'() */'}
+    L.fnNeed(name,need);
+    if(typeof tpl==='function')return tpl(args,ats);
+    return tpl.replace(/\$(\d)/g,(m,d)=>args[d-1]);
+  }
+  const X={E,flat,ty,need,warn,T};
+  const out=[];
+  const push=(d,s)=>out.push(L.ind.repeat(d+L.base)+s);
+  const ex=(src,top=true)=>{const a=A_(src);return a?E(a,top):'0'};
+  const tgt=src=>{
+    const a=A_(src);
+    if(!a||(a.k!=='var'&&a.k!=='idx'))return {code:'/* ? */',t:'int',ast:null,name:'x'};
+    return {code:E(a,true),t:ty(a),ast:a,name:a.n};
+  };
+  function block(list,d){
+    if(!list.length&&L.pass){push(d,L.pass);return}
+    for(const n of list)stmt(n,d);
+  }
+  function stmt(n,d){
+    switch(n.type){
+      case 'comment':for(const l of (n.text||'').split('\n'))push(d,(L.cmt+' '+l).trimEnd());break;
+      case 'declare':{
+        const nm=(n.name||'').trim();
+        if(!IDENT.test(nm)){warn(M('Nome di variabile non valido: ','Invalid variable name: ')+nm);break}
+        const sz=(n.size||'').trim();let szc=null,sza=null;
+        if(sz){sza=A_(sz);szc=sza?coerceCode(E(sza,true),ty(sza),'int'):'0'}
+        L.decl(nm,VT[n.vt]||'int',szc,sza,X).forEach(l=>push(d,l));
+        break}
+      case 'assign':{
+        const tg=tgt(n.target),a=A_(n.expr);
+        const v=a?coerceCode(E(a,true),ty(a),tg.t):'0';
+        L.assign(tg,v,a,X).forEach(l=>push(d,l));
+        break}
+      case 'input':{
+        const tg=tgt(n.name);
+        const pb=((n.prompt||'').trim()||(t('ui.enter')+tg.name));
+        const pr=/[?:.!]\s*$/.test(pb)?pb+' ':pb+': ';
+        L.input(tg,pr,X).forEach(l=>push(d,l));
+        break}
+      case 'output':{
+        const a=A_(n.expr)||{k:'num',v:0};
+        L.output(X,a,n.nl!==false).forEach(l=>push(d,l));
+        break}
+      case 'if':
+        push(d,L.ifO(ex(n.cond)));block(n.yes,d+1);
+        if(n.no.length){push(d,L.els);block(n.no,d+1)}
+        if(L.end)push(d,L.end);
+        break;
+      case 'while':push(d,L.whO(ex(n.cond)));block(n.body,d+1);if(L.end)push(d,L.end);break;
+      case 'do':
+        push(d,L.doO);block(n.body,d+1);
+        L.doC(ex(n.cond)).forEach(([o,s])=>push(d+o,s));
+        break;
+      case 'for':{
+        const v=(n.v||'').trim();
+        if(!IDENT.test(v)){warn(M('Nome di variabile non valido: ','Invalid variable name: ')+v);break}
+        const fa=A_(n.from)||{k:'num',v:0},ta=A_(n.to)||{k:'num',v:0},sSrc=(n.step||'').trim()||'1',sa=A_(sSrc)||{k:'num',v:1};
+        const lit=sa.k==='num'?sa.v:(sa.k==='un'&&sa.op==='-'&&sa.e.k==='num')?-sa.e.v:null;
+        const vt=T[v].t,ft=ty(fa),tt=ty(ta),st=ty(sa);
+        const vc=L.v(v);
+        let fc=coerceCode(E(fa,true),ft,vt),tc=E(ta,true),sc=E(sa,true);
+        let vcmp=vc;
+        if(L.strictOps){
+          if(vt==='real'&&tt==='int')tc=L.toReal(tc);
+          else if(vt==='int'&&tt==='real')vcmp=L.toReal(vc);
+          if(vt==='real'&&st==='int')sc=L.toReal(sc);
+        }
+        const cond=lit!==null?`${vcmp} ${lit<0?'>=':'<='} ${tc}`:`((${sc}) > 0 && ${vcmp} <= ${tc}) || ((${sc}) < 0 && ${vcmp} >= ${tc})`;
+        const f={v:vc,vt,isNew:!decl.has(v),fc,tc,sc,lit,cond,ft,tt,st};
+        const r=L.forO(f);
+        r.open.forEach(([o,s])=>push(d+o,s));block(n.body,d+1);r.close.forEach(([o,s])=>push(d+o,s));
+        break}
+    }
+  }
+  block(prog.body,0);
+  const hdr=L.cmt+' EDUFLOW: '+(prog.name||'');
+  const lines=[...L.pre(need,hdr),...out,...L.post(need)];
+  return {code:lines.join('\n')+'\n',warns,notes:L.notes.map(n=>M(n[0],n[1]))};
+}
+
+/*DOM*/
+const $=s=>document.querySelector(s);
+const host=$('#host'),board=$('#board'),propsEl=$('#props'),varsEl=$('#vars'),conEl=$('#con'),menu=$('#menu');
+const GAP=44,MARGIN=44,CW=7.8,LANE=34,SK=14;
+let prog={name:'',body:[]};
+let selId=null,zoom=1,dim={W:300,H:300},locked=false;
+let byId=new Map(),parents=new Map(),slots=[];
+let hist=[],hi=-1,lastKey='',lastT=0,saveT=0;
+const trunc=(s,n)=>s.length>n?s.slice(0,n-1)+'…':s;
+/* Indirizzo per «Offrimi un caffè». Se è vuoto il pulsante resta nascosto. */
+const COFFEE_URL='https://www.paypal.com/qrcodes/p2pqrc/WTSNFQVDKZE6G';
+const HOSTTHEME=document.documentElement.getAttribute('data-theme');
+
+/* ---------- etichette dei blocchi ---------- */
+function label(n){
+  switch(n.type){
+    case 'declare':return tl(n.vt)+' '+n.name+((n.size||'').trim()?'['+n.size.trim()+']':'');
+    case 'assign':return n.target+' = '+n.expr;
+    case 'input':return 'Input '+n.name;
+    case 'output':return 'Output '+n.expr;
+    case 'for':{const st=(n.step||'').trim();return n.v+': '+n.from+' → '+n.to+(st&&st!=='1'?', '+t('ui.stepWord')+' '+st:'')}
+    case 'comment':return n.text.split('\n')[0];
+    default:return n.cond;
+  }
+}
+
+/* ---------- misura ---------- */
+function mSeq(list){
+  let l=18,r=18,h=GAP;
+  for(const n of list){mNode(n);l=Math.max(l,n._m.l);r=Math.max(r,n._m.r);h+=n._m.h+GAP}
+  return {l,r,h};
+}
+function head(n,txt){
+  const tw=Math.min(txt.length*CW,210);
+  if(n.type==='for')return {hw:tw+76,hh:46,shape:'hex'};
+  const hw=Math.max(140,tw*1.5+56);
+  return {hw,hh:Math.max(64,Math.min(112,Math.round(hw*.44))),shape:'dia'};
+}
+function mNode(n){
+  n._err=nodeErrors(n);
+  const lab=label(n),ty=n.type;
+  if(ty==='if'||ty==='while'||ty==='for'||ty==='do'){
+    const txt=trunc(lab,ty==='for'?40:26),H=head(n,txt);
+    const m={txt,...H};
+    if(ty==='if'){
+      const Y=mSeq(n.yes),N=mSeq(n.no);
+      m.Y=Y;m.N=N;
+      m.Dl=Math.max(H.hw/2,Y.r+14);m.Dr=Math.max(H.hw/2,N.l+14);
+      m.l=m.Dl+Y.l;m.r=m.Dr+N.r;m.h=H.hh+Math.max(Y.h,N.h);
+    }else{
+      const B=mSeq(n.body);m.B=B;
+      m.l=Math.max(H.hw/2,B.l)+LANE;
+      m.r=Math.max(H.hw/2,B.r)+(ty==='do'?14:LANE);
+      m.h=ty==='do'?8+B.h+H.hh+22:H.hh+B.h+30;
+    }
+    n._m=m;return;
+  }
+  const io=ty==='input'||ty==='output';
+  const txt=trunc(lab,38);
+  const w=Math.max(120,Math.ceil(txt.length*CW)+36+(io?2*SK:0));
+  n._m={l:w/2,r:w/2,h:ty==='comment'?34:42,w,txt};
+}
+
+/* ---------- disegno ---------- */
+const line=(d,arrow)=>'<path class="e" d="'+d+'"'+(arrow?' marker-end="url(#ah)"':'')+'/>';
+function slotSvg(list,i,x,y){
+  slots.push({list,i});
+  return '<g class="slot" data-tip="ui:slot" data-s="'+(slots.length-1)+'" transform="translate('+x+' '+y+')"><circle class="hit" r="12"/><circle class="dot" r="3"/><path class="plus" d="M-4.5 0H4.5M0-4.5V4.5"/></g>';
+}
+function drawSeq(list,cx,y,endArrow){
+  let s='',cy=y;
+  for(let i=0;i<=list.length;i++){
+    const n=list[i],last=i===list.length;
+    s+=line('M'+cx+' '+cy+'V'+(cy+GAP),last?endArrow:n.type!=='do');
+    s+=slotSvg(list,i,cx,cy+GAP/2);
+    cy+=GAP;
+    if(!last){byId.set(n.id,n);parents.set(n.id,{list,i});s+=drawNode(n,cx,cy);cy+=n._m.h}
+  }
+  return s;
+}
+const bpDot=(n,x,y)=>n.bp?'<circle class="bpd" cx="'+(x+9)+'" cy="'+(y+9)+'" r="5.5"/>':'';
+const gOpen=n=>'<g class="nd t-'+n.type+(n.id===selId?' sel':'')+(n._err.length?' err':'')+'" data-id="'+n.id+'">';
+function shapeSvg(k,cx,y,w,h){
+  const x0=cx-w/2,x1=cx+w/2,yc=y+h/2;
+  switch(k){
+    case 'dia':return '<path class="sh" d="M'+cx+' '+y+'L'+x1+' '+yc+'L'+cx+' '+(y+h)+'L'+x0+' '+yc+'Z"/>';
+    case 'hex':return '<path class="sh" d="M'+(x0+18)+' '+y+'H'+(x1-18)+'L'+x1+' '+yc+'L'+(x1-18)+' '+(y+h)+'H'+(x0+18)+'L'+x0+' '+yc+'Z"/>';
+    case 'io':return '<path class="sh" d="M'+(x0+SK)+' '+y+'H'+x1+'L'+(x1-SK)+' '+(y+h)+'H'+x0+'Z"/>';
+    case 'note':return '<rect class="sh" x="'+x0+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="6"/>';
+    default:return '<rect class="sh" x="'+x0+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="3"/>';
+  }
+}
+function drawNode(n,cx,y){
+  const m=n._m,ty=n.type,YES=esc(t('ui.yes')),NO=esc(t('ui.no'));
+  if(ty==='if'||ty==='while'||ty==='for'||ty==='do'){
+    const {hw,hh}=m;
+    if(ty==='if'){
+      const yc=y+hh/2,xl=cx-m.Dl,xr=cx+m.Dr,yM=y+m.h;
+      let s=gOpen(n)+shapeSvg(m.shape,cx,y,hw,hh)+'<text x="'+cx+'" y="'+yc+'">'+esc(m.txt)+'</text>'+bpDot(n,cx-hw/2,y)+'</g>';
+      s+=line('M'+(cx-hw/2)+' '+yc+'H'+xl+'V'+(y+hh))+line('M'+(cx+hw/2)+' '+yc+'H'+xr+'V'+(y+hh));
+      s+=drawSeq(n.yes,xl,y+hh,false)+drawSeq(n.no,xr,y+hh,false);
+      s+=line('M'+xl+' '+(y+hh+m.Y.h)+'V'+yM)+line('M'+xr+' '+(y+hh+m.N.h)+'V'+yM)+line('M'+xl+' '+yM+'H'+xr);
+      s+='<text class="lbl" x="'+(cx-hw/2-8)+'" y="'+(yc-8)+'" text-anchor="end">'+YES+'</text><text class="lbl" x="'+(cx+hw/2+8)+'" y="'+(yc-8)+'">'+NO+'</text>';
+      return s;
+    }
+    if(ty==='do'){
+      const yd=y+8+m.B.h,yc=yd+hh/2,xL=cx-m.l+14;
+      let s=line('M'+cx+' '+y+'V'+(y+8));
+      s+=drawSeq(n.body,cx,y+8,true);
+      s+=gOpen(n)+shapeSvg(m.shape,cx,yd,hw,hh)+'<text x="'+cx+'" y="'+yc+'">'+esc(m.txt)+'</text>'+bpDot(n,cx-hw/2,yd)+'</g>';
+      s+=line('M'+(cx-hw/2)+' '+yc+'H'+xL+'V'+(y+8)+'H'+cx);
+      s+=line('M'+cx+' '+(yd+hh)+'V'+(y+m.h));
+      s+='<text class="lbl" x="'+(cx-hw/2-8)+'" y="'+(yc-8)+'" text-anchor="end">'+YES+'</text><text class="lbl" x="'+(cx+8)+'" y="'+(yd+hh+16)+'">'+NO+'</text>';
+      return s;
+    }
+    const yc=y+hh/2,yB=y+hh+m.B.h,xL=cx-m.l+14,xR=cx+m.r-14;
+    let s=gOpen(n)+shapeSvg(m.shape,cx,y,hw,hh)+'<text x="'+cx+'" y="'+yc+'">'+esc(m.txt)+'</text>'+bpDot(n,cx-hw/2,y)+'</g>';
+    s+=drawSeq(n.body,cx,y+hh,false);
+    s+=line('M'+cx+' '+yB+'H'+xL+'V'+yc+'H'+(cx-hw/2),true);
+    s+=line('M'+(cx+hw/2)+' '+yc+'H'+xR+'V'+(y+m.h)+'H'+cx);
+    s+='<text class="lbl" x="'+(cx+8)+'" y="'+(y+hh+16)+'">'+YES+'</text><text class="lbl" x="'+(cx+hw/2+8)+'" y="'+(yc-8)+'">'+NO+'</text>';
+    return s;
+  }
+  const shape=ty==='input'||ty==='output'?'io':ty==='comment'?'note':'rect';
+  return gOpen(n)+shapeSvg(shape,cx,y,m.w,m.h)+'<text x="'+cx+'" y="'+(y+m.h/2)+'">'+esc(m.txt)+'</text>'+bpDot(n,cx-m.w/2,y)+'</g>';
+}
+function pill(cx,y,txt){
+  return '<g class="nd term"><rect class="sh" x="'+(cx-55)+'" y="'+y+'" width="110" height="36" rx="18"/><text x="'+cx+'" y="'+(y+18)+'">'+esc(txt)+'</text></g>';
+}
+function buildSvg(){
+  const S=mSeq(prog.body),L=Math.max(S.l,110),R=Math.max(S.r,110);
+  const W=L+R+2*MARGIN,cx=MARGIN+L,H=24+36+S.h+36+24;
+  dim={W,H};
+  return '<svg xmlns="http://www.w3.org/2000/svg" id="svg" viewBox="0 0 '+W+' '+H+'" width="'+W*zoom+'" height="'+H*zoom+'" role="img" aria-label="Flowchart">'
+    +'<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z"/></marker></defs>'
+    +pill(cx,24,t('ui.start'))+drawSeq(prog.body,cx,60,true)+pill(cx,60+S.h,t('ui.end'))+'</svg>';
+}
+function render(){
+  hideTip();
+  byId=new Map();parents=new Map();slots=[];
+  host.innerHTML=buildSvg();
+  if(selId&&!byId.has(selId))selId=null;
+  markApply(true);
+}
+function applyZoom(){
+  const s=$('#svg');if(s){s.setAttribute('width',dim.W*zoom);s.setAttribute('height',dim.H*zoom)}
+  $('#zReset').textContent=Math.round(zoom*100)+'%';
+}
+function setZoom(z){zoom=Math.min(2.2,Math.max(.3,z));applyZoom()}
+function fit(){setZoom(Math.min(1.2,(board.clientWidth-24)/dim.W))}
+
+/* ---------- cronologia e salvataggio ---------- */
+const snap=()=>JSON.stringify(prog,(k,v)=>k[0]==='_'?undefined:v);
+function commit(key){
+  const s=snap();
+  if(s!==hist[hi]){
+    const now=Date.now();
+    if(key&&key===lastKey&&now-lastT<1200&&hi===hist.length-1&&hi>0)hist[hi]=s;
+    else{hist.length=hi+1;hist.push(s);if(hist.length>200)hist.shift();hi=hist.length-1}
+    lastKey=key||'';lastT=now;
+    clearTimeout(saveT);saveT=setTimeout(save,300);
+  }
+  render();updateUndo();
+}
+function save(){try{localStorage.setItem('flussi.v1',snap())}catch(e){}}
+function updateUndo(){$('#undo').disabled=locked||hi<=0;$('#redo').disabled=locked||hi>=hist.length-1}
+function restore(s){
+  const o=JSON.parse(s);prog={name:o.name||t('ui.untitled'),body:o.body};
+  let mx=0;walk(prog.body,n=>{mx=Math.max(mx,parseInt(String(n.id).slice(1))||0)});_id=Math.max(_id,mx);
+  $('#pname').value=prog.name;render();renderProps();
+}
+function undo(){if(locked||hi<=0)return;hi--;lastKey='';restore(hist[hi]);updateUndo();save()}
+function redo(){if(locked||hi>=hist.length-1)return;hi++;lastKey='';restore(hist[hi]);updateUndo();save()}
+function loadProgram(o){
+  prog={name:String(o.name||t('ui.untitled')).slice(0,60),body:sanitize(o.body)};
+  selId=null;$('#pname').value=prog.name;
+  hist=[snap()];hi=0;lastKey='';
+  render();renderProps();updateUndo();save();
+  zoom=1;applyZoom();if(dim.W>board.clientWidth)fit();
+  board.scrollTo(0,0);
+}
+
+/* ---------- modifica ---------- */
+function insertNode(list,idx,type){
+  if(locked)return;
+  const n=mk[type]();
+  if(type==='output')n.expr=M('"Ciao"','"Hello"');
+  if(type==='comment')n.text=M('Nota','Note');
+  list.splice(idx,0,n);selId=n.id;
+  commit('add');renderProps();
+  const el=host.querySelector('[data-id="'+n.id+'"]');if(el)reveal(el);
+}
+function selectNode(id){selId=id;render();renderProps()}
+function deleteSel(){
+  if(locked||!selId)return;const p=parents.get(selId);if(!p)return;
+  p.list.splice(p.i,1);selId=null;commit('del');renderProps();
+}
+function toggleBp(){
+  const n=selId&&byId.get(selId);
+  if(!n||locked||n.type==='comment')return;
+  if(n.bp)delete n.bp;else n.bp=true;
+  commit('bp');renderProps();
+}
+function moveSel(d){
+  if(locked||!selId)return;const p=parents.get(selId),j=p.i+d;
+  if(j<0||j>=p.list.length)return;
+  [p.list[p.i],p.list[j]]=[p.list[j],p.list[p.i]];commit('mv');renderProps();
+}
+function cloneNode(n){const c=JSON.parse(JSON.stringify(n,(k,v)=>k[0]==='_'?undefined:v));walk([c],x=>{x.id=uid()});return c}
+function dupSel(){
+  if(locked||!selId)return;const p=parents.get(selId),c=cloneNode(p.list[p.i]);
+  p.list.splice(p.i+1,0,c);selId=c.id;commit('dup');renderProps();
+}
+function glyph(ty){
+  const g={
+    declare:'<rect x="3" y="3" width="22" height="12" rx="2"/>',
+    assign:'<rect x="3" y="3" width="22" height="12" rx="2"/><path d="M8 9h12"/>',
+    input:'<path d="M8 3h17l-5 12H3z"/>',
+    output:'<path d="M8 3h17l-5 12H3z"/><path d="M10 9h8"/>',
+    if:'<path d="M14 2l11 7-11 7L3 9z"/>',
+    while:'<path d="M14 2l11 7-11 7L3 9z"/>',
+    for:'<path d="M8 3h12l6 6-6 6H8L2 9z"/>',
+    do:'<path d="M14 2l11 7-11 7L3 9z"/><path d="M3 9H1"/>',
+    comment:'<rect x="3" y="3" width="22" height="12" rx="5" stroke-dasharray="3 2"/>',
+  };
+  return '<svg viewBox="0 0 28 18" aria-hidden="true">'+g[ty]+'</svg>';
+}
+function buildStencil(){
+  $('#stencil').innerHTML='<h4>'+esc(t('ui.blocks'))+'</h4>'+ORDER.map(k=>'<button class="blk" data-t="'+k+'" data-tip="blk:'+k+'">'+glyph(k)+BN[k]+'</button>').join('')
+    +'<p>'+esc(t('ui.stencilHint'))+'</p>';
+}
+function addFromStencil(ty){
+  if(locked)return;
+  let list=prog.body,idx=list.length;
+  if(selId&&parents.has(selId)){const p=parents.get(selId);list=p.list;idx=p.i+1}
+  insertNode(list,idx,ty);
+}
+let menuCtx=null;
+function openMenu(x,y,list,i){
+  menuCtx={list,i};
+  menu.innerHTML=ORDER.map(k=>'<button data-t="'+k+'" data-tip="blk:'+k+'">'+glyph(k)+BN[k]+'</button>').join('');
+  menu.hidden=false;
+  const r=menu.getBoundingClientRect();
+  menu.style.left=Math.max(8,Math.min(x+8,innerWidth-r.width-8))+'px';
+  menu.style.top=Math.max(8,Math.min(y+8,innerHeight-r.height-8))+'px';
+}
+const closeMenu=()=>{menu.hidden=true;menuCtx=null};
+function reveal(el){
+  const b=board.getBoundingClientRect(),r=el.getBoundingClientRect(),m=40;
+  if(r.top<b.top+m)board.scrollTop-=(b.top+m)-r.top;
+  else if(r.bottom>b.bottom-m)board.scrollTop+=r.bottom-(b.bottom-m);
+  if(r.left<b.left+m)board.scrollLeft-=(b.left+m)-r.left;
+  else if(r.right>b.right-m)board.scrollLeft+=r.right-(b.right-m);
+}
+
+/* ---------- ispettore ---------- */
+const FIELDS={
+  declare:[['vt','vt','select'],['name','name','text','name'],['size','size','text','size']],
+  assign:[['target','target','text','target'],['expr','expr','text','expr']],
+  input:[['name','inVar','text','target'],['prompt','prompt','text']],
+  output:[['expr','outExpr','text','outExpr'],['nl','nl','check']],
+  if:[['cond','cond','text','cond']],
+  while:[['cond','wcond','text','cond']],
+  for:[['v','v','text'],['from','from','text'],['to','to','text'],['step','step','text','step']],
+  do:[['cond','wcond','text','cond']],
+  comment:[['text','text','area']],
+};
+function helpHtml(){
+  return '<div class="help"><h3>'+esc(t('ui.helpTitle'))+'</h3><p>'+esc(t('ui.help1'))+'</p><p>'+esc(t('ui.help2'))+'</p><button class="btn" data-a="manual">'+esc(t('ui.openManual'))+'</button></div>';
+}
+function renderProps(){
+  const n=selId&&byId.get(selId);
+  if(!n){propsEl.innerHTML=helpHtml();return}
+  let h='<h3>'+BN[n.type]+'</h3><p class="psub">'+esc(t('blk.'+n.type+'.short'))+'</p><fieldset '+(locked?'disabled':'')+'>';
+  for(const [k,fk,kd,ph] of FIELDS[n.type]){
+    const id='f-'+k,lab=esc(t('fld.'+fk));
+    if(kd==='check')h+='<div class="fld chk"><input type="checkbox" id="'+id+'" data-k="'+k+'" '+(n[k]!==false?'checked':'')+'><label for="'+id+'">'+lab+'</label></div>';
+    else if(kd==='select')h+='<div class="fld"><label for="'+id+'">'+lab+'</label><select id="'+id+'" data-k="'+k+'">'+TYPES.map(ty=>'<option value="'+ty+'" '+(n[k]===ty?'selected':'')+'>'+esc(tl(ty))+'</option>').join('')+'</select></div>';
+    else if(kd==='area')h+='<div class="fld"><label for="'+id+'">'+lab+'</label><textarea id="'+id+'" data-k="'+k+'" rows="3">'+esc(n[k])+'</textarea></div>';
+    else h+='<div class="fld"><label for="'+id+'">'+lab+'</label><input type="text" id="'+id+'" data-k="'+k+'" value="'+esc(n[k])+'" placeholder="'+esc(ph?t('fld.ph.'+ph):'')+'" spellcheck="false" autocomplete="off"></div>';
+  }
+  h+='<p class="errs" id="perr">'+esc(n._err.join('\n'))+'</p>';
+  h+='<div class="acts">'+(n.type==='comment'?'':'<button class="btn" data-a="bp" aria-pressed="'+!!n.bp+'" data-tip="ui:bp">'+esc(t('ui.bp'))+'</button>')+'<button class="btn" data-a="up">'+esc(t('ui.up'))+'</button><button class="btn" data-a="down">'+esc(t('ui.down'))+'</button><button class="btn" data-a="dup">'+esc(t('ui.dup'))+'</button><button class="btn" data-a="del">'+esc(t('ui.del'))+'</button></div></fieldset>';
+  propsEl.innerHTML=h;
+}
+propsEl.addEventListener('input',e=>{
+  const n=selId&&byId.get(selId),k=e.target.dataset.k;
+  if(!n||!k||locked)return;
+  n[k]=e.target.type==='checkbox'?e.target.checked:e.target.value;
+  commit('f'+n.id+k);
+  const pe=$('#perr');if(pe)pe.textContent=(byId.get(n.id)||n)._err.join('\n');
+});
+propsEl.addEventListener('click',e=>{
+  const a=e.target.closest('[data-a]');if(!a)return;
+  ({bp:toggleBp,up:()=>moveSel(-1),down:()=>moveSel(1),dup:dupSel,del:deleteSel,manual:()=>openSettings('manual')})[a.dataset.a]();
+});
+
+/* ---------- interazioni sulla tavola ---------- */
+let pan=null;
+board.addEventListener('pointerdown',e=>{
+  if(e.button!==0||e.target.closest('.nd,.slot'))return;
+  pan={x:e.clientX,y:e.clientY,sl:board.scrollLeft,st:board.scrollTop,moved:false};
+  board.setPointerCapture(e.pointerId);
+});
+board.addEventListener('pointermove',e=>{
+  if(!pan)return;
+  const dx=e.clientX-pan.x,dy=e.clientY-pan.y;
+  if(Math.abs(dx)+Math.abs(dy)>4){pan.moved=true;board.classList.add('pan')}
+  if(pan.moved){board.scrollLeft=pan.sl-dx;board.scrollTop=pan.st-dy}
+});
+const endPan=()=>{if(pan&&!pan.moved&&selId){selId=null;render();renderProps()}pan=null;board.classList.remove('pan')};
+board.addEventListener('pointerup',endPan);board.addEventListener('pointercancel',()=>{pan=null;board.classList.remove('pan')});
+host.addEventListener('click',e=>{
+  const s=e.target.closest('.slot');
+  if(s){if(locked)return;e.stopPropagation();const sl=slots[+s.dataset.s];openMenu(e.clientX,e.clientY,sl.list,sl.i);return}
+  const nd=e.target.closest('.nd[data-id]');
+  if(nd){closeMenu();selectNode(nd.dataset.id)}
+});
+host.addEventListener('dblclick',e=>{
+  const nd=e.target.closest('.nd[data-id]');if(!nd||locked)return;
+  const i=propsEl.querySelector('input[type=text],textarea,select');if(i){i.focus();if(i.select)i.select()}
+});
+board.addEventListener('wheel',e=>{
+  if(!(e.ctrlKey||e.metaKey))return;
+  e.preventDefault();setZoom(zoom*(e.deltaY<0?1.1:1/1.1));
+},{passive:false});
+menu.addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b||!menuCtx)return;
+  const c=menuCtx;closeMenu();insertNode(c.list,c.i,b.dataset.t);
+});
+document.addEventListener('pointerdown',e=>{if(!menu.hidden&&!e.target.closest('#menu')&&!e.target.closest('.slot'))closeMenu()});
+$('#stencil').addEventListener('click',e=>{const b=e.target.closest('.blk');if(b)addFromStencil(b.dataset.t)});
+$('#zIn').onclick=()=>setZoom(zoom*1.15);$('#zOut').onclick=()=>setZoom(zoom/1.15);
+$('#zReset').onclick=()=>setZoom(1);$('#zFit').onclick=fit;
+
+/* ---------- suggerimenti al passaggio del mouse ---------- */
+const tipEl=$('#tip');
+let tipTimer=0,tipTarget=null,tipShown=false,tipX=0,tipY=0;
+function tipHtml(el){
+  const key=el.dataset.tip||'';let ty=null,node=null;
+  if(el.classList.contains('nd')&&el.dataset.id){node=byId.get(el.dataset.id);ty=node&&node.type}
+  else if(key.startsWith('blk:'))ty=key.slice(4);
+  if(ty){
+    const b=t('blk.'+ty),g=t('tip.tags');
+    let h='<div class="th"><span>'+BN[ty]+'</span></div><p><b>'+esc(b.short)+'</b></p><p class="dim">'+esc(b.long)+'</p>'
+     +'<div class="tl">'+g.fields+'</div><ul>'+b.fields.map(f=>'<li><b>'+esc(f[0])+'.</b> '+esc(f[1])+'</li>').join('')+'</ul>'
+     +'<div class="tl">'+g.example+'</div><code>'+esc(b.example)+'</code>'
+     +'<div class="tl">'+g.tip+'</div><p class="dim">'+esc(b.tip)+'</p>';
+    if(node&&node._err&&node._err.length)h='<p class="terr"><b>'+esc(t('msg.wrongNode'))+'</b>'+esc(node._err.join(' · '))+'</p>'+h;
+    return h;
+  }
+  if(key.startsWith('ui:')){
+    const d=t('tip.'+key.slice(3));if(!d||typeof d!=='object')return '';
+    return '<div class="th"><span>'+esc(d.t)+'</span>'+(d.k?'<kbd>'+esc(d.k)+'</kbd>':'')+'</div><p>'+esc(d.d)+'</p>';
+  }
+  return '';
+}
+function placeTip(){
+  const r=tipEl.getBoundingClientRect(),pad=12;
+  let x=tipX+16,y=tipY+18;
+  if(x+r.width>innerWidth-pad)x=Math.max(pad,tipX-r.width-12);
+  if(y+r.height>innerHeight-pad)y=Math.max(pad,tipY-r.height-12);
+  tipEl.style.left=x+'px';tipEl.style.top=y+'px';
+}
+function showTip(el){
+  if(!el.isConnected||!SET.tips)return;
+  const h=tipHtml(el);if(!h)return;
+  tipEl.innerHTML=h;tipEl.hidden=false;tipShown=true;placeTip();
+}
+function hideTip(){clearTimeout(tipTimer);tipTarget=null;if(tipShown){tipEl.hidden=true;tipShown=false}}
+document.addEventListener('pointerover',e=>{
+  if(!SET.tips||e.pointerType==='touch'||!modal.hidden&&!e.target.closest('#modal'))return;
+  const el=e.target.closest('[data-tip],.nd[data-id]');
+  if(!el){hideTip();return}
+  if(el===tipTarget)return;
+  hideTip();tipTarget=el;tipX=e.clientX;tipY=e.clientY;
+  tipTimer=setTimeout(()=>showTip(el),320);
+});
+document.addEventListener('pointermove',e=>{tipX=e.clientX;tipY=e.clientY;if(tipShown)placeTip()});
+document.addEventListener('pointerdown',hideTip);
+document.addEventListener('keydown',hideTip);
+document.addEventListener('scroll',hideTip,true);
+document.addEventListener('pointerleave',hideTip);
+document.addEventListener('focusin',e=>{
+  if(!SET.tips)return;
+  const el=e.target.closest&&e.target.closest('[data-tip]');
+  if(el&&e.target.matches(':focus-visible')){const r=el.getBoundingClientRect();hideTip();tipTarget=el;tipX=r.left;tipY=r.bottom-14;showTip(el)}
+});
+document.addEventListener('focusout',hideTip);
+
+/* ---------- esecuzione ---------- */
+const DELAYS=[900,400,120,20,0];
+const yieldNow=()=>new Promise(r=>{const c=new MessageChannel();c.port1.onmessage=()=>r();c.port2.postMessage(0)});
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+let ctl=null,runState='idle',inputWait=null;
+let curId=null,varsDirty=false,markDirty=false,rafId=0,outBuf=[],failId=null,prevVars=new Map();
+let statusFn=()=>t('ui.ready');
+function setStatus(f){statusFn=typeof f==='string'?()=>f:f;$('#status').textContent=statusFn()}
+function schedule(){if(!rafId)rafId=requestAnimationFrame(flush)}
+function flush(){
+  rafId=0;
+  if(outBuf.length){
+    const frag=document.createDocumentFragment();
+    for(const [tx,c] of outBuf){const s=document.createElement('span');if(c)s.className=c;s.textContent=tx;frag.appendChild(s)}
+    outBuf=[];conEl.appendChild(frag);
+    while(conEl.childNodes.length>4000)conEl.removeChild(conEl.firstChild);
+    conEl.scrollTop=conEl.scrollHeight;
+  }
+  if(varsDirty){varsDirty=false;renderVars();updateWatch()}
+  if(markDirty){markDirty=false;markApply(false)}
+}
+function markApply(keepScroll){
+  const old=host.querySelector('.nd.run,.nd.fail');
+  if(old&&old.dataset.id!==curId&&old.dataset.id!==failId)old.classList.remove('run','fail');
+  const el=curId&&host.querySelector('[data-id="'+curId+'"]');
+  if(el){
+    if(failId===curId){el.classList.remove('run');el.classList.add('fail')}else el.classList.add('run');
+    if(!keepScroll)reveal(el);
+  }
+}
+function renderVars(){
+  const env=ctl&&ctl.env;
+  const head='<h4>'+esc(t('ui.vars'))+'</h4>';
+  if(!env||!env.size){varsEl.innerHTML=head+'<p class="help" style="margin:0">'+esc(t('ui.varsEmpty'))+'</p>';prevVars=new Map();return}
+  let h=head+'<table><tr><th>'+esc(t('ui.name'))+'</th><th>'+esc(t('ui.type'))+'</th><th>'+esc(t('ui.value'))+'</th></tr>';
+  const nv=new Map();
+  for(const [k,v] of env){
+    const val=v.arr?'['+v.value.slice(0,40).map(fmt).join(', ')+(v.value.length>40?', …':'')+']':(v.type==='String'?JSON.stringify(v.value):fmt(v.value));
+    nv.set(k,val);
+    h+='<tr'+(prevVars.has(k)&&prevVars.get(k)!==val?' class="chg"':'')+'><td>'+esc(k)+'</td><td>'+esc(tl(v.type))+(v.arr?'[]':'')+'</td><td>'+esc(val)+'</td></tr>';
+  }
+  prevVars=nv;varsEl.innerHTML=h+'</table>';
+}
+function updateWatch(){
+  const src=($('#watchIn').value||'').trim(),o=$('#watchOut');
+  if(!src){o.textContent='';o.className='wout';return}
+  const r=parseC(src);
+  if(r.err){o.textContent=r.err;o.className='wout bad';return}
+  const env=ctl&&ctl.env;
+  if(!env||!env.size){o.textContent='—';o.className='wout';return}
+  try{const v=evalA(r.ast,env);o.textContent='= '+(typeof v==='string'?JSON.stringify(v):fmt(v));o.className='wout'}
+  catch(e){o.textContent=e.message;o.className='wout bad'}
+}
+$('#watchIn').addEventListener('input',()=>{SET.watch=$('#watchIn').value;saveSet();updateWatch()});
+function out(text,cls){outBuf.push([text,cls||'']);schedule()}
+function setBtns(){
+  const idle=runState==='idle',paused=ctl&&ctl.paused;
+  $('#bRun').disabled=!idle&&!paused;
+  $('#bRun span').textContent=!idle&&paused?t('ui.cont'):t('ui.run');
+  $('#bStep').disabled=!idle&&!paused;
+  $('#bPause').disabled=idle||paused;
+  $('#bStop').disabled=idle;
+  $('#pname').disabled=!idle;$('#examples').disabled=!idle;
+  ['bNew','bImport'].forEach(i=>$('#'+i).disabled=!idle);
+}
+function lock(on){
+  locked=on;document.body.classList.toggle('running',on);
+  propsEl.querySelectorAll('fieldset').forEach(f=>f.disabled=on);updateUndo();
+}
+const TRACE_MAX=600;let lastTrace=null;
+function snapVars(env){
+  const m={};
+  for(const [k,v] of env)m[k]=v.arr?'['+v.value.slice(0,12).map(fmt).join(', ')+(v.value.length>12?', …':'')+']':(v.type==='String'?JSON.stringify(v.value):fmt(v.value));
+  return m;
+}
+function traceTick(c,n){
+  const tr=c.trace;tr.total++;
+  if(tr.pending&&tr.rows.length<TRACE_MAX)tr.rows.push({step:tr.pending.step,label:tr.pending.label,vars:snapVars(c.env)});
+  tr.pending=tr.rows.length<TRACE_MAX?{step:tr.total,label:BN[n.type]+': '+label(n)}:null;
+}
+function makeCtl(paused){
+  const c={paused,stopped:false,steps:0,waiter:null,env:null,last:0};
+  c.tick=async function(n){
+    if(c.stopped)throw new StopErr();
+    curId=n.id;markDirty=true;varsDirty=true;schedule();
+    if(c.trace)traceTick(c,n);
+    if(n.bp&&!c.paused&&!c.stopped)c.paused=true;
+    if(++c.steps>30000000)throw new RunErr(M('Il programma sembra non terminare: troppi passi eseguiti','The program seems to never end: too many steps executed'));
+    if(c.paused){setStatus(()=>t('ui.paused'));setBtns();await new Promise(r=>{c.waiter=r});c.waiter=null;setStatus(()=>t('ui.running'));setBtns()}
+    else{
+      const d=DELAYS[+$('#speed').value];
+      if(d>0)await sleep(d);
+      else if(performance.now()-c.last>10){await yieldNow();c.last=performance.now()}
+    }
+    if(c.stopped)throw new StopErr();
+  };
+  return c;
+}
+const io={
+  out,
+  input(msg,type){
+    return new Promise((res,rej)=>{
+      inputWait={res,rej};
+      $('#inprompt').textContent=msg+' ('+tl(type)+')';
+      $('#inform').hidden=false;$('#inval').value='';$('#inval').focus();
+      setStatus(()=>t('ui.waiting'));
+    });
+  }
+};
+$('#inform').addEventListener('submit',e=>{
+  e.preventDefault();if(!inputWait)return;
+  const v=$('#inval').value,w=inputWait;inputWait=null;
+  $('#inform').hidden=true;out(v+'\n','in');setStatus(()=>t('ui.running'));w.res(v);
+});
+async function startRun(paused){
+  conEl.textContent='';outBuf=[];prevVars=new Map();failId=null;curId=null;
+  ctl=makeCtl(paused);ctl.trace={rows:[],pending:null,total:0};runState='running';lock(true);setBtns();setStatus(()=>t('ui.running'));renderVars();
+  const t0=performance.now();
+  try{
+    await execute(prog,io,ctl);
+    out('\n'+t('ui.endLine')+'\n','sys');
+    const steps=ctl.steps,ms=Math.round(performance.now()-t0);
+    setStatus(()=>t('ui.finished',steps,ms));
+  }catch(e){
+    if(e instanceof StopErr){out('\n'+t('ui.stopLine')+'\n','sys');setStatus(()=>t('ui.stopped'))}
+    else if(e instanceof RunErr){
+      out('\n'+t('ui.errPrefix')+e.message+'\n','err');setStatus(()=>t('ui.error'));
+      if(e.node){failId=e.node.id;curId=e.node.id;markDirty=true}
+    }else{out('\n'+t('ui.internalErr')+e.message+'\n','err');setStatus(()=>t('ui.error'))}
+  }finally{
+    runState='idle';inputWait=null;$('#inform').hidden=true;
+    const c=ctl;varsDirty=true;
+    if(c.trace){const tr=c.trace;if(tr.pending&&tr.rows.length<TRACE_MAX&&c.env)tr.rows.push({step:tr.pending.step,label:tr.pending.label,vars:snapVars(c.env)});lastTrace=tr}
+    if(!failId)curId=null;
+    markDirty=true;schedule();lock(false);setBtns();
+    ctl=c;ctl.paused=false;setBtns();
+    if(!failId){const o=host.querySelector('.nd.run');if(o)o.classList.remove('run')}
+  }
+}
+function doRun(){
+  if(runState==='idle'){if(!prog.body.length){setStatus(()=>t('ui.emptyDiagram'));return}startRun(false)}
+  else if(ctl.paused){ctl.paused=false;if(ctl.waiter)ctl.waiter()}
+}
+function doStep(){
+  if(runState==='idle'){if(!prog.body.length){setStatus(()=>t('ui.emptyDiagram'));return}startRun(true)}
+  else if(ctl.paused&&ctl.waiter){ctl.waiter()}
+}
+function doPause(){if(runState!=='idle'){ctl.paused=true;setBtns()}}
+function doStop(){
+  if(runState==='idle')return;
+  ctl.stopped=true;ctl.paused=false;
+  if(ctl.waiter)ctl.waiter();
+  if(inputWait){const w=inputWait;inputWait=null;$('#inform').hidden=true;w.rej(new StopErr())}
+}
+$('#bRun').onclick=doRun;$('#bStep').onclick=doStep;$('#bPause').onclick=doPause;$('#bStop').onclick=doStop;
+function setSpeedLabel(){$('#speedL').textContent=t('ui.speedN')[+$('#speed').value]}
+$('#speed').addEventListener('input',()=>{setSpeedLabel();SET.speed=+$('#speed').value;saveSet()});
+
+/* ---------- finestre ---------- */
+const modal=$('#modal'),sheet=$('#sheet');
+function openModal(html,wide){sheet.className=wide?'sheet wide':'sheet';sheet.innerHTML=html;modal.hidden=false;hideTip();const f=sheet.querySelector('textarea,button:not(.tab)');if(f)f.focus()}
+function closeModal(){modal.hidden=true;sheet.innerHTML=''}
+modal.addEventListener('pointerdown',e=>{if(e.target===modal)closeModal()});
+async function copyText(text,btn,fallbackEl){
+  const old=btn.textContent;
+  try{await navigator.clipboard.writeText(text);btn.textContent=t('ui.copied')}
+  catch(e){if(fallbackEl){const r=document.createRange();r.selectNodeContents(fallbackEl);const s=getSelection();s.removeAllRanges();s.addRange(r);if(fallbackEl.select)fallbackEl.select()}btn.textContent=t('ui.copyManual')}
+  setTimeout(()=>{btn.textContent=old},1800);
+}
+let expTab='text';
+function svgExportText(){
+  const src=$('#svg');if(!src)return '';
+  const clone=src.cloneNode(true);
+  const props=['fill','stroke','stroke-width','stroke-dasharray','stroke-linejoin','font-family','font-size','font-weight','font-style','text-anchor','dominant-baseline'];
+  (function inline(o,c){
+    const cs=getComputedStyle(o);let st='';
+    for(const p of props){const v=cs.getPropertyValue(p);if(v)st+=p+':'+v+';'}
+    c.setAttribute('style',st);c.removeAttribute('class');c.removeAttribute('data-id');c.removeAttribute('data-tip');
+    const oc=[...o.children],cc=[...c.children];
+    oc.forEach((ch,i)=>{if(ch.classList&&ch.classList.contains('slot')){cc[i].remove();return}inline(ch,cc[i])});
+  })(src,clone);
+  clone.setAttribute('width',dim.W);clone.setAttribute('height',dim.H);
+  const bg=document.createElementNS('http://www.w3.org/2000/svg','rect');
+  bg.setAttribute('width','100%');bg.setAttribute('height','100%');bg.setAttribute('fill',getComputedStyle(document.body).backgroundColor);
+  clone.insertBefore(bg,clone.children[1]||null);
+  return '<?xml version="1.0" encoding="UTF-8"?>\n'+new XMLSerializer().serializeToString(clone);
+}
+function showExport(tab){
+  expTab=tab||expTab;
+  const svgMode=expTab==='svg';
+  const tabs='<div class="tabs" role="tablist"><button class="tab" role="tab" data-etab="text" aria-selected="'+(!svgMode)+'">'+esc(t('ui.expText'))+'</button><button class="tab" role="tab" data-etab="svg" aria-selected="'+svgMode+'">'+esc(t('ui.expSvg'))+'</button></div>';
+  let body,txt;
+  if(svgMode){
+    txt=svgExportText();
+    body='<div class="svgprev"><img alt="" src="data:image/svg+xml;charset=utf-8,'+encodeURIComponent(txt)+'"></div><textarea id="expTa" readonly spellcheck="false"></textarea>';
+  }else{
+    txt=JSON.stringify({app:'eduflow',version:2,name:prog.name,body:JSON.parse(snap()).body},null,1);
+    body='<textarea id="expTa" readonly spellcheck="false"></textarea>';
+  }
+  openModal('<header><h3>'+esc(t('ui.exportTitle'))+'</h3><button class="btn" data-x>'+esc(t('ui.close'))+'</button></header>'+tabs+body
+    +'<div class="foot"><span class="hint">'+esc(svgMode?t('ui.svgHint'):t('ui.exportHint'))+'</span><button class="btn primary" data-copy>'+esc(t('ui.copy'))+'</button></div>');
+  $('#expTa').value=txt;
+}
+function showImport(){
+  openModal('<header><h3>'+esc(t('ui.importTitle'))+'</h3><button class="btn" data-x>'+esc(t('ui.close'))+'</button></header>'
+    +'<textarea id="impTa" spellcheck="false" placeholder="'+esc(t('ui.importPh'))+'"></textarea>'
+    +'<p class="errs" id="impErr"></p>'
+    +'<div class="foot"><label class="btn">'+esc(t('ui.chooseFile'))+'<input type="file" id="impFile" accept=".json,.txt,application/json" hidden></label><button class="btn primary" data-imp>'+esc(t('ui.importBtn'))+'</button></div>');
+  $('#impFile').addEventListener('change',e=>{
+    const f=e.target.files[0];if(!f)return;
+    const r=new FileReader();r.onload=()=>{$('#impTa').value=String(r.result)};r.readAsText(f);
+  });
+}
+function doImport(){
+  try{
+    const o=JSON.parse($('#impTa').value);
+    if(!o||!Array.isArray(o.body))throw new Error('x');
+    clearActive();loadProgram(o);closeModal();
+  }catch(e){$('#impErr').textContent=t('ui.importErr')}
+}
+function showNew(){
+  openModal('<header><h3>'+esc(t('ui.newTitle'))+'</h3><button class="btn" data-x>'+esc(t('ui.close'))+'</button></header>'
+    +'<p>'+esc(t('ui.newText'))+'</p>'
+    +'<div class="foot"><span></span><button class="btn primary" data-new>'+esc(t('ui.newBtn'))+'</button></div>');
+}
+
+/* ---------- tabella di traccia ---------- */
+function showTrace(){
+  const tr=lastTrace;
+  const head='<header><h3>'+esc(t('ui.traceTitle'))+'</h3><button class="btn" data-x>'+esc(t('ui.close'))+'</button></header>';
+  if(!tr||!tr.rows.length){openModal(head+'<p>'+esc(t('ui.traceEmpty'))+'</p>');return}
+  const cols=[];for(const r of tr.rows)for(const k in r.vars)if(!cols.includes(k))cols.push(k);
+  let prev={},h=head+'<p class="hint">'+esc(t('ui.traceHint'))+'</p><div class="tracewrap" style="flex:1"><table><thead><tr><th>'+esc(t('ui.traceStepH'))+'</th><th>'+esc(t('ui.traceBlock'))+'</th>'+cols.map(c=>'<th>'+esc(c)+'</th>').join('')+'</tr></thead><tbody>';
+  const tsv=[['#',t('ui.traceBlock'),...cols].join('\t')];
+  for(const r of tr.rows){
+    h+='<tr><td>'+r.step+'</td><td>'+esc(r.label)+'</td>'+cols.map(c=>{const v=r.vars[c];const ch=v!==undefined&&prev[c]!==v;return '<td'+(ch?' class="ch"':'')+'>'+(v===undefined?'':esc(v))+'</td>'}).join('')+'</tr>';
+    tsv.push([r.step,r.label,...cols.map(c=>r.vars[c]===undefined?'':r.vars[c])].join('\t'));
+    prev=r.vars;
+  }
+  h+='</tbody></table></div><div class="foot"><span class="hint">'+(tr.total>tr.rows.length?esc(t('ui.traceCut',tr.rows.length)):'')+'</span><button class="btn primary" data-copytsv>'+esc(t('ui.copy'))+'</button></div>';
+  openModal(h,true);
+  sheet.dataset.tsv=tsv.join('\n');
+}
+
+/* ---------- sfide ---------- */
+let chSel='hello',chRes=null;
+const chI=()=>LANG==='it'?0:1;
+function openChallenges(id){
+  if(id)chSel=id;
+  const done=new Set(SET.done),i=chI(),ch=CH.find(x=>x.id===chSel)||CH[0];
+  const lv=t('ui.chLevel');
+  const list=CH.map(c=>'<button data-ch="'+c.id+'" aria-pressed="'+(c.id===ch.id)+'"><span>'+esc(c.t[i])+'<br><span class="lv">'+esc(lv[c.lv])+'</span></span>'+(done.has(c.id)?'<span class="ok">✓</span>':'')+'</button>').join('');
+  let d='<h4>'+esc(ch.t[i])+'</h4><span class="lv hint">'+esc(lv[ch.lv])+'</span>'
+   +'<div class="tl">'+esc(t('ui.chGoal'))+'</div><p>'+esc(ch.g[i])+'</p>'
+   +'<div class="tl">'+esc(t('ui.chTry'))+'</div>'+ch.tests.slice(0,2).map(x=>'<p><code>'+esc(t('ui.chIn'))+': '+esc(x.i.length?x.i.join(', '):t('ui.chNone'))+'  →  '+esc(t('ui.chOut'))+': '+esc(chOut(x.o))+'</code></p>').join('')
+   +'<div class="acts"><button class="btn" data-chact="start">'+esc(t('ui.chStart'))+'</button><button class="btn primary" data-chact="check">'+esc(t('ui.chCheck'))+'</button><button class="btn" data-chact="hint">'+esc(t('ui.chHint'))+'</button><button class="btn" data-chact="sol">'+esc(t('ui.chSol'))+'</button></div>'
+   +'<p class="hintbox" id="chhint" hidden>'+esc(ch.h[i])+'</p>';
+  if(chRes&&chRes.id===ch.id){
+    if(chRes.empty)d+='<p class="errs">'+esc(t('ui.chEmpty'))+'</p>';
+    else{
+      const all=chRes.pass===chRes.res.length;
+      d+='<p class="chsum'+(all?' ok':'')+'">'+esc(all?t('ui.chAllOk'):t('ui.chSomeFail',chRes.pass,chRes.res.length))+'</p><div class="chres">'
+       +chRes.res.map(r=>'<div class="'+(r.ok?'ok':'no')+'"><small>'+esc(r.ok?t('ui.chPass'):t('ui.chFail'))+' · '+esc(t('ui.chIn'))+': '+esc(r.i.length?r.i.join(', '):t('ui.chNone'))+'</small>'
+         +(r.ok?esc(r.got):esc(t('ui.chWant'))+': '+esc(r.want)+'<br>'+(r.err?esc(t('ui.chErr'))+': '+esc(r.err):esc(t('ui.chGot'))+': '+esc(r.got||t('ui.chNone'))))+'</div>').join('')+'</div>';
+    }
+  }
+  openModal('<header><h3>'+esc(t('ui.challenges'))+'</h3><button class="btn" data-x>'+esc(t('ui.close'))+'</button></header>'
+    +'<p class="hint" style="margin:0">'+esc(t('ui.chIntro'))+' · <b>'+esc(t('ui.chDone',done.size,CH.length))+'</b></p>'
+    +'<div class="chl"><div class="chlist">'+list+'</div><div class="chdet">'+d+'</div></div>',true);
+}
+async function checkChallenge(id){
+  if(runState!=='idle')return;
+  const ch=CH.find(x=>x.id===id);if(!ch)return;
+  if(!prog.body.length){chRes={id,empty:true};openChallenges(id);return}
+  const res=await runTests(prog,ch);
+  const pass=res.filter(r=>r.ok).length;
+  if(pass===res.length&&!SET.done.includes(id)){SET.done.push(id);saveSet()}
+  chRes={id,res,pass};openChallenges(id);
+}
+function renderChbar(){
+  const bar=$('#chbar'),ch=SET.active&&CH.find(x=>x.id===SET.active);
+  if(!ch){bar.hidden=true;return}
+  bar.hidden=false;
+  bar.innerHTML='<b>'+esc(t('ui.chActive'))+': '+esc(ch.t[chI()])+'</b><button class="btn primary" data-cb="check">'+esc(t('ui.chCheck'))+'</button><button class="btn" data-cb="open">'+esc(t('ui.challenges'))+'</button><button class="btn" data-cb="x" aria-label="'+esc(t('ui.chClose'))+'">✕</button>';
+}
+$('#chbar').addEventListener('click',e=>{
+  const b=e.target.closest('[data-cb]');if(!b)return;
+  if(b.dataset.cb==='check')checkChallenge(SET.active);
+  else if(b.dataset.cb==='open')openChallenges(SET.active);
+  else{SET.active=null;saveSet();renderChbar()}
+});
+function clearActive(){if(SET.active){SET.active=null;saveSet();renderChbar()}}
+
+/* ---------- impostazioni e manuale ---------- */
+let curTab='settings';
+function settingsPane(){
+  const seg=(attr,cur,items)=>'<div class="seg" role="group">'+items.map(([v,l])=>'<button '+attr+'="'+v+'" aria-pressed="'+(cur===v)+'">'+esc(l)+'</button>').join('')+'</div>';
+  const opt=(title,desc,ctl)=>'<div class="opt"><div><b>'+esc(title)+'</b><p>'+esc(desc)+'</p></div>'+ctl+'</div>';
+  return opt(t('ui.language'),t('ui.languageD'),seg('data-lang',LANG,[['it','Italiano'],['en','English']]))
+   +opt(t('ui.theme'),t('ui.themeD'),seg('data-theme-set',SET.theme,[['auto',t('ui.themeAuto')],['light',t('ui.themeLight')],['dark',t('ui.themeDark')]]))
+   +opt(t('ui.tips'),t('ui.tipsD'),'<input type="checkbox" id="optTips" aria-label="'+esc(t('ui.tips'))+'" '+(SET.tips?'checked':'')+'>')
+   +opt(t('ui.grid'),t('ui.gridD'),'<input type="checkbox" id="optGrid" aria-label="'+esc(t('ui.grid'))+'" '+(SET.grid?'checked':'')+'>')
+   +opt(t('ui.defSpeed'),t('ui.defSpeedD'),'<select id="optSpeed" class="btn" aria-label="'+esc(t('ui.defSpeed'))+'">'+t('ui.speedN').map((s,i)=>'<option value="'+i+'" '+(SET.speed===i?'selected':'')+'>'+esc(s)+'</option>').join('')+'</select>')
+   +opt(t('ui.resetCh'),t('ui.resetChD'),'<button class="btn" data-resetch>'+esc(t('ui.resetCh'))+'</button>')
+   +opt(t('ui.reset'),t('ui.resetD'),'<button class="btn" data-reset>'+esc(t('ui.reset'))+'</button>');
+}
+function manualPane(){
+  const S=manualSections();
+  return '<div class="manual"><div class="mtoc"><input type="search" id="msearch" placeholder="'+esc(t('ui.search'))+'" aria-label="'+esc(t('ui.search'))+'">'
+    +S.map(s=>'<button data-m="'+s.id+'">'+esc(s.h)+'</button>').join('')+'</div>'
+    +'<div class="mbody" id="mbody">'+S.map(s=>'<section id="m-'+s.id+'" data-m="'+s.id+'"><h3>'+esc(s.h)+'</h3>'+s.b+'</section>').join('')+'<p class="nores" id="mnone" hidden>'+esc(t('ui.noResults'))+'</p></div></div>';
+}
+function aboutPane(){
+  return '<div class="about"><h2>'+esc(t('ui.aboutTitle'))+'</h2><p>'+esc(t('ui.aboutText'))+'</p><p class="hint">'+esc(t('ui.aboutPriv'))+'</p>'
+    +(COFFEE_URL?'<p>'+esc(t('ui.aboutCoffee'))+'</p><p><a class="btn coffee" href="'+esc(COFFEE_URL)+'" target="_blank" rel="noopener">'+esc(t('ui.coffee'))+'</a></p>':'')+'</div>';
+}
+function openSettings(tab){
+  curTab=tab||curTab;
+  const tabs=[['settings',t('ui.tabSettings')],['manual',t('ui.tabManual')],['about',t('ui.tabAbout')]];
+  openModal('<header><h3>'+esc(t('ui.settings'))+'</h3><button class="btn" data-x>'+esc(t('ui.close'))+'</button></header>'
+    +'<div class="tabs" role="tablist">'+tabs.map(([k,l])=>'<button class="tab" role="tab" data-tab="'+k+'" aria-selected="'+(curTab===k)+'">'+esc(l)+'</button>').join('')+'</div>'
+    +'<div class="spane" id="spane">'+(curTab==='manual'?manualPane():curTab==='about'?aboutPane():settingsPane())+'</div>',true);
+}
+function filterManual(q){
+  q=q.trim().toLowerCase();let any=false;
+  document.querySelectorAll('#mbody section').forEach(s=>{
+    const hit=!q||s.textContent.toLowerCase().includes(q);
+    s.hidden=!hit;any=any||hit;
+    const b=document.querySelector('.mtoc button[data-m="'+s.dataset.m+'"]');if(b)b.hidden=!hit;
+  });
+  $('#mnone').hidden=any;
+}
+sheet.addEventListener('input',e=>{if(e.target.id==='msearch')filterManual(e.target.value)});
+sheet.addEventListener('change',e=>{
+  const i=e.target.id;
+  if(i==='optTips'){SET.tips=e.target.checked;saveSet();hideTip()}
+  else if(i==='optGrid'){SET.grid=e.target.checked;saveSet();applyGrid()}
+  else if(i==='optSpeed'){SET.speed=+e.target.value;saveSet();$('#speed').value=SET.speed;setSpeedLabel()}
+});
+sheet.addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;
+  if(b.hasAttribute('data-x'))closeModal();
+  else if(b.dataset.tab){curTab=b.dataset.tab;openSettings(curTab)}
+  else if(b.dataset.lang){setLang(b.dataset.lang)}
+  else if(b.dataset.themeSet){SET.theme=b.dataset.themeSet;saveSet();applyTheme();openSettings('settings')}
+  else if(b.dataset.m){const el=document.getElementById('m-'+b.dataset.m);if(el)el.scrollIntoView({block:'start'})}
+  else if(b.hasAttribute('data-resetch')){SET.done=[];saveSet();b.textContent=t('ui.copied')}
+  else if(b.hasAttribute('data-reset')){SET={lang:null,theme:'auto',tips:true,grid:true,speed:1,done:SET.done||[],active:SET.active||null};LANG=(String(navigator.language||'').toLowerCase().startsWith('it'))?'it':'en';saveSet();pcache.clear();$('#speed').value=1;applyTheme();applyGrid();applyLang();openSettings('settings')}
+  else if(b.hasAttribute('data-copy')){const ta=$('#expTa');copyText(ta.value,b,ta)}
+  else if(b.hasAttribute('data-copytsv'))copyText(sheet.dataset.tsv||'',b,null)
+  else if(b.dataset.etab)showExport(b.dataset.etab)
+  else if(b.dataset.ch){chRes=null;openChallenges(b.dataset.ch)}
+  else if(b.dataset.chact){
+    const ch=CH.find(x=>x.id===chSel),act=b.dataset.chact;
+    if(act==='hint'){const h=$('#chhint');if(h)h.hidden=!h.hidden}
+    else if(act==='check')checkChallenge(chSel);
+    else if(runState!=='idle')return;
+    else if(act==='start'){loadProgram({name:ch.t[chI()],body:[]});SET.active=ch.id;saveSet();closeModal();location.hash='diagram';showView();renderChbar()}
+    else if(act==='sol'){prog={name:ch.t[chI()],body:sanitize(ch.sol())};selId=null;commit('sol');renderProps();SET.active=ch.id;saveSet();renderChbar();closeModal();location.hash='diagram';showView();setStatus(()=>t('ui.chSolNote'))}
+  }
+  else if(b.hasAttribute('data-imp'))doImport();
+  else if(b.hasAttribute('data-new')){prog={name:t('ui.untitled'),body:[]};$('#pname').value=prog.name;selId=null;clearActive();commit('new');renderProps();closeModal()}
+});
+function applyTheme(){
+  const r=document.documentElement;
+  if(SET.theme==='light'||SET.theme==='dark')r.setAttribute('data-theme',SET.theme);
+  else if(HOSTTHEME)r.setAttribute('data-theme',HOSTTHEME);else r.removeAttribute('data-theme');
+}
+function applyGrid(){board.classList.toggle('nogrid',!SET.grid)}
+function setLang(l){
+  if(!SUP.includes(l)||l===LANG)return;
+  SET.lang=l;LANG=l;saveSet();pcache.clear();applyLang();
+  if(!modal.hidden&&curTab)openSettings(curTab);
+}
+function applyLang(){
+  document.documentElement.lang=LANG;
+  document.querySelectorAll('[data-i18n]').forEach(e=>{e.textContent=t(e.dataset.i18n)});
+  document.querySelectorAll('[data-i18n-ph]').forEach(e=>e.setAttribute('placeholder',t(e.dataset.i18nPh)));
+  document.querySelectorAll('[data-i18n-aria]').forEach(e=>e.setAttribute('aria-label',t(e.dataset.i18nAria)));
+  buildStencil();buildExamples();setSpeedLabel();
+  $('#cvLangs').setAttribute('aria-label',t('ui.cvTitle'));
+  setBtns();setStatus(statusFn);render();renderProps();renderVars();renderChbar();
+  if(!$('#codeview').hidden)renderCode();
+}
+
+/* ---------- esempi ---------- */
+function buildExamples(){
+  const sel=$('#examples');
+  sel.innerHTML='<option value="">'+esc(t('ui.examples'))+'</option>'+EXAMPLES.map((f,i)=>'<option value="'+i+'">'+esc(f().name)+'</option>').join('');
+}
+$('#examples').addEventListener('change',e=>{
+  const v=e.target.value;if(v==='')return;
+  clearActive();loadProgram(EXAMPLES[+v]());e.target.value='';
+});
+
+/* ---------- pagina Codice ---------- */
+const KW=new Set(('abstract and as async await begin bool boolean break case catch char class const continue def default defer do double elif else elsif end enum extends false final finally float fn for foreach from fun func function global if implements import in include int interface is let long loop new nil none not null package private protected public pub range readonly repeat return self static stride string struct switch then this throw true try typeof until use using val var void when while yield Int Double String Bool Boolean Integer Float Long').split(/\s+/));
+const HLRE={
+  hash:/("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')|(#.*)|(\b\d+(?:\.\d+)?\b)|(\b[A-Za-z_][A-Za-z0-9_]*\b)/g,
+  slash:/("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')|(\/\/.*)|(\b\d+(?:\.\d+)?\b)|(\b[A-Za-z_][A-Za-z0-9_]*\b)/g,
+};
+function hl(line,id){
+  if((id==='c'||id==='cpp')&&/^\s*#/.test(line))return '<span class="pp">'+esc(line)+'</span>';
+  const re=HLRE[id==='py'||id==='rb'?'hash':'slash'];re.lastIndex=0;
+  let res='',last=0,m;
+  while((m=re.exec(line))){
+    res+=esc(line.slice(last,m.index));last=m.index+m[0].length;
+    const tx=esc(m[0]);
+    if(m[1]!==undefined)res+='<span class="s">'+tx+'</span>';
+    else if(m[2]!==undefined)res+='<span class="c">'+tx+'</span>';
+    else if(m[3]!==undefined)res+='<span class="n">'+tx+'</span>';
+    else res+=KW.has(m[0])?'<span class="k">'+tx+'</span>':tx;
+  }
+  return res+esc(line.slice(last));
+}
+let cvLang='js',cvAll=false;const cvCodes={};
+function cvCard(id){
+  const L=LG[id],r=gen(prog,id),lines=r.code.replace(/\n$/,'').split('\n');
+  cvCodes[id]=r.code;
+  const tested=TESTED.includes(id);
+  const nts=[...r.notes,...r.warns];
+  return '<article class="cc" id="cc-'+id+'"><header><div><h3>'+esc(L.name)+'</h3><span class="fn">'+esc(L.file)+' · '+esc(t('ui.lines',lines.length))+'</span></div><button class="btn" data-copy="'+id+'">'+esc(t('ui.copy'))+'</button></header>'
+   +'<pre class="code" tabindex="0"><code>'+lines.map(l=>'<span class="l">'+hl(l,id)+'</span>').join('')+'</code></pre>'
+   +'<div class="how"><b>'+esc(t('ui.cvHow'))+':</b> <code>'+esc(L.run)+'</code></div>'
+   +'<div class="badge'+(tested?' ok':'')+'">'+esc(tested?t('ui.cvTested'):t('ui.cvUntested'))+'</div>'
+   +(nts.length?'<ul class="nts">'+nts.map(n=>'<li>'+esc(n)+'</li>').join('')+'</ul>':'')
+   +'</article>';
+}
+function renderCode(){
+  $('#cvProg').textContent=prog.name||'';
+  $('#cvAllChk').checked=cvAll;
+  $('#cvLangs').innerHTML=LANGS.map(id=>'<button class="lg" data-lg="'+id+'" aria-pressed="'+(!cvAll&&id===cvLang)+'">'+esc(LG[id].name)+(TESTED.includes(id)?'<i title="'+esc(t('ui.cvTested'))+'"></i>':'')+'</button>').join('');
+  const main=$('#cvMain');
+  if(!prog.body.length){main.innerHTML='<p class="empty">'+esc(t('ui.cvEmpty'))+'</p>';return}
+  main.innerHTML='<p class="hint">'+esc(t('ui.cvNote'))+'</p>'+(cvAll?LANGS:[cvLang]).map(cvCard).join('');
+}
+$('#cvLangs').addEventListener('click',e=>{
+  const b=e.target.closest('.lg');if(!b)return;
+  cvLang=b.dataset.lg;
+  if(cvAll){const el=document.getElementById('cc-'+cvLang);if(el)el.scrollIntoView({block:'start'});$('#cvLangs').querySelectorAll('.lg').forEach(x=>x.setAttribute('aria-pressed','false'))}
+  else renderCode();
+});
+$('#cvAllChk').addEventListener('change',e=>{cvAll=e.target.checked;renderCode()});
+$('#cvMain').addEventListener('click',e=>{
+  const b=e.target.closest('[data-copy]');if(!b)return;
+  const id=b.dataset.copy,code=document.querySelector('#cc-'+id+' pre.code');
+  copyText(cvCodes[id],b,code);
+});
+function showView(){
+  const code=location.hash==='#code';
+  $('#workview').hidden=code;$('#codeview').hidden=!code;
+  document.body.classList.toggle('cv',code);
+  if(code){hideTip();renderCode()}
+}
+window.addEventListener('hashchange',showView);
+$('#bCode').onclick=()=>{location.hash='code';showView()};
+$('#cvBack').onclick=()=>{location.hash='diagram';showView()};
+
+/* ---------- barra comandi ---------- */
+$('#bExport').onclick=showExport;$('#bImport').onclick=showImport;$('#bNew').onclick=showNew;
+$('#bSettings').onclick=()=>openSettings('settings');
+$('#bChal').onclick=()=>{chRes=null;openChallenges()};
+$('#bTrace').onclick=showTrace;
+$('#undo').onclick=undo;$('#redo').onclick=redo;
+$('#pname').addEventListener('input',e=>{prog.name=e.target.value;commit('name')});
+
+/* ---------- tastiera ---------- */
+document.addEventListener('keydown',e=>{
+  const typing=/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName);
+  if(e.key==='Escape'){if(!modal.hidden)closeModal();else closeMenu();return}
+  if(!modal.hidden)return;
+  const mod=e.ctrlKey||e.metaKey;
+  if(!$('#codeview').hidden)return;
+  if(mod&&e.key==='Enter'){e.preventDefault();doRun();return}
+  if(mod&&e.key.toLowerCase()==='z'&&!typing){e.preventDefault();e.shiftKey?redo():undo();return}
+  if(mod&&e.key.toLowerCase()==='y'&&!typing){e.preventDefault();redo();return}
+  if(e.key==='F10'){e.preventDefault();doStep();return}
+  if(e.key==='F9'){e.preventDefault();toggleBp();return}
+  if(typing)return;
+  if(mod&&e.key.toLowerCase()==='d'){e.preventDefault();dupSel();return}
+  if(e.key==='Delete'||(e.key==='Backspace'&&document.activeElement===document.body)){if(selId){e.preventDefault();deleteSel()}}
+});
+
+/* ---------- avvio ---------- */
+(function init(){
+  $('#speed').value=SET.speed;
+  $('#watchIn').value=SET.watch||'';
+  applyTheme();applyGrid();
+  let o=null;
+  try{const s=localStorage.getItem('flussi.v1');if(s){o=JSON.parse(s);if(!o||!Array.isArray(o.body)||!o.body.length)o=null}}catch(e){o=null}
+  hist=[];
+  loadProgram(o||EXAMPLES[0]());
+  if(COFFEE_URL){const a=$('#bCoffee');a.href=COFFEE_URL;a.hidden=false}
+  applyLang();
+  showView();
+})();
+
+</script>
+
+</body></html>
