@@ -1,4 +1,7 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!--
+  EDUFLOW - Copyright (c) 2026 Silvio Munerotto. Created by Silvio Munerotto with Claude (Anthropic).
+  https://github.com/smoka99/eduflow
+-->
 <title>EDUFLOW</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
@@ -110,7 +113,14 @@ body.running .stencil,body.running .menu{pointer-events:none;opacity:.5}
 .nd.fail .sh{fill:var(--err-bg);stroke:var(--err);stroke-width:2.4;stroke-dasharray:none}
 .term{cursor:default}.term .sh{fill:var(--ink);stroke:var(--ink)}.term text{fill:var(--bg);font-weight:600}
 .lbl{font:600 11px var(--ui);fill:var(--muted)}
-.slot{cursor:pointer}.slot .hit{fill:transparent}
+.slot{cursor:pointer}
+.nd.dragsrc{opacity:.35}
+.slot.dropping .dot{transform:scale(2.2);fill:var(--accent)}.slot.dropping.nodrop{display:none}
+.slot.drop .dot{transform:scale(4.2);fill:var(--accent)}.slot.drop .plus{opacity:1}
+body.dragging,body.dragging *{cursor:grabbing!important;user-select:none}body.dragging .tip{display:none}
+.dragghost{position:fixed;z-index:90;pointer-events:none;padding:4px 10px;background:var(--accent);color:#fff;border-radius:3px;font:600 12.5px var(--mono);box-shadow:0 4px 14px var(--shadow)}
+.board.grabready,.board.grabready *{cursor:grab!important}
+.blk{touch-action:pan-y}.foot .grow{flex:1}.slot .hit{fill:transparent}
 .slot .dot{fill:var(--edge);transform-box:fill-box;transform-origin:center;transition:transform .1s}
 .slot .plus{stroke:var(--accent-ink);stroke-width:1.6;opacity:0;pointer-events:none}
 .slot:hover .dot{transform:scale(3.4);fill:var(--accent)}.slot:hover .plus{opacity:1}
@@ -452,17 +462,17 @@ TXT.it={
   speedN:['Lenta','Media','Veloce','Molto veloce','Massima'],
   code:'Codice',export:'Esporta',import:'Importa',new:'Nuovo',settings:'Impostazioni',
   examples:'Esempi…',undo:'Annulla',redo:'Ripeti',progName:'Nome del programma',
-  blocks:'Blocchi',stencilHint:'Aggiunge dopo il blocco selezionato, oppure clicca un punto + sul diagramma.',
+  blocks:'Blocchi',stencilHint:'Trascina un blocco sul diagramma (rilascialo su un punto +), oppure cliccalo per aggiungerlo dopo quello selezionato.',
   zoomIn:'Ingrandisci',zoomOut:'Riduci',zoomReset:'Zoom al 100%',fit:'Adatta',
   vars:'Variabili',varsEmpty:'I valori compaiono qui durante l\'esecuzione.',name:'Nome',type:'Tipo',value:'Valore',
   console:'Console',ready:'Pronto',running:'In esecuzione',paused:'In pausa',waiting:'In attesa di un valore',
   finished:(s,ms)=>`Terminato · ${s} passi · ${ms} ms`,stopped:'Interrotto',error:'Errore',emptyDiagram:'Il diagramma è vuoto',
   endLine:'— Programma terminato —',stopLine:'— Interrotto —',errPrefix:'Errore: ',internalErr:'Errore interno: ',enter:'Inserisci ',send:'Invio',
-  close:'Chiudi',copy:'Copia',copied:'Copiato',copyManual:'Seleziona e copia a mano',
+  close:'Chiudi',copy:'Copia',download:'Scarica',copied:'Copiato',copyManual:'Seleziona e copia a mano',
   stepWord:'passo',up:'Su',down:'Giù',dup:'Duplica',del:'Elimina',
   helpTitle:'Come si usa',
   help1:'Aggiungi blocchi dal pannello a sinistra o con i punti + sul diagramma. Seleziona un blocco per modificarlo, poi premi Esegui o Passo.',
-  help2:'Passa il mouse su un blocco o su un pulsante per leggere cosa fa.',
+  help2:'Trascina i blocchi per spostarli; sposta la tavola trascinando lo sfondo (o tenendo premuto Spazio / tasto centrale). Passa il mouse su un blocco o su un pulsante per leggere cosa fa.',
   openManual:'Apri il manuale',
   exportTitle:'Esporta il programma',exportHint:'Copia il testo e conservalo. Incollalo in Importa per riaprire il diagramma.',
   importTitle:'Importa un programma',importPh:'Incolla qui il testo esportato da EDUFLOW',importErr:'Formato non riconosciuto: serve il testo esportato da EDUFLOW.',
@@ -477,14 +487,14 @@ TXT.it={
   defSpeed:'Velocità iniziale',defSpeedD:'Velocità di esecuzione all\'apertura.',
   reset:'Ripristina le impostazioni',resetD:'Torna ai valori predefiniti.',
   search:'Cerca nel manuale…',noResults:'Nessun risultato',
-  aboutTitle:'EDUFLOW',aboutText:'Un editor di diagrammi di flusso che si può eseguire: costruisci l\'algoritmo con i blocchi, osservalo passo dopo passo, mettiti alla prova con le sfide e ottieni il codice in 11 linguaggi.',
+  credits:'Creato da',aboutTitle:'EDUFLOW',aboutText:'Un editor di diagrammi di flusso che si può eseguire: costruisci l\'algoritmo con i blocchi, osservalo passo dopo passo, mettiti alla prova con le sfide e ottieni il codice in 11 linguaggi.',
   aboutPriv:'Tutto avviene nel tuo browser. Il programma si salva da solo in questo browser e non viene inviato da nessuna parte.',
   cvBack:'Diagramma',cvTitle:'Codice generato',cvAll:'Mostra tutti i linguaggi',cvHow:'Come eseguirlo',cvNotes:'Cosa controllare',
   cvEmpty:'Il diagramma è vuoto: aggiungi dei blocchi per vedere il codice.',cvNote:'Traduzione diretta del diagramma. Controlla i tipi e i formati di stampa prima di usarla altrove.',
   cvTested:'Provato con questo compilatore o interprete',cvUntested:'Generato secondo le regole del linguaggio, non ancora provato',
   lines:n=>n+(n===1?' riga':' righe'),
   bp:'Punto di interruzione',bpHelp:'Ferma l\'esecuzione prima di questo blocco',watch:'Osserva',watchPh:'Espressione, es. sum * 2',resetCh:'Azzera i progressi delle sfide',resetChD:'Cancella le sfide segnate come completate.',
-  coffee:'Offrimi un caffè',aboutCoffee:'Se EDUFLOW ti è utile, puoi offrirmi un caffè: è un modo per ringraziare e per sostenere nuove funzioni.',
+  coffee:'Offrimi un caffè',aboutGit:'Il codice sorgente di EDUFLOW è su GitHub: puoi consultarlo, scaricarlo e segnalare idee o problemi.',aboutCoffee:'Se EDUFLOW ti è utile, puoi offrirmi un caffè: è un modo per ringraziare e per sostenere nuove funzioni.',
   challenges:'Sfide',chIntro:'Risolvi gli esercizi costruendo il diagramma. Il controllo prova il tuo programma con più valori e confronta ciò che scrive con il risultato atteso.',
   chDone:(a,b)=>a+' di '+b+' completate',chLevel:['Facile','Medio','Difficile'],chGoal:'Obiettivo',chTry:'Esempi di prova',chIn:'Input',chOut:'Output atteso',
   chStart:'Inizia',chCheck:'Controlla la mia soluzione',chHint:'Suggerimento',chSol:'Mostra una soluzione',chPass:'Superato',chFail:'Non ancora',
@@ -578,17 +588,17 @@ TXT.en={
   speedN:['Slow','Medium','Fast','Very fast','Maximum'],
   code:'Code',export:'Export',import:'Import',new:'New',settings:'Settings',
   examples:'Examples…',undo:'Undo',redo:'Redo',progName:'Program name',
-  blocks:'Blocks',stencilHint:'Adds after the selected block, or click a + dot on the diagram.',
+  blocks:'Blocks',stencilHint:'Drag a block onto the diagram (drop it on a + dot), or click it to add after the selected one.',
   zoomIn:'Zoom in',zoomOut:'Zoom out',zoomReset:'Zoom to 100%',fit:'Fit',
   vars:'Variables',varsEmpty:'Values appear here while the program runs.',name:'Name',type:'Type',value:'Value',
   console:'Console',ready:'Ready',running:'Running',paused:'Paused',waiting:'Waiting for input',
   finished:(s,ms)=>`Finished · ${s} steps · ${ms} ms`,stopped:'Stopped',error:'Error',emptyDiagram:'The diagram is empty',
   endLine:'— Program finished —',stopLine:'— Stopped —',errPrefix:'Error: ',internalErr:'Internal error: ',enter:'Enter ',send:'Send',
-  close:'Close',copy:'Copy',copied:'Copied',copyManual:'Select and copy by hand',
+  close:'Close',copy:'Copy',download:'Download',copied:'Copied',copyManual:'Select and copy by hand',
   stepWord:'step',up:'Up',down:'Down',dup:'Duplicate',del:'Delete',
   helpTitle:'How it works',
   help1:'Add blocks from the left panel or with the + dots on the diagram. Select a block to edit it, then press Run or Step.',
-  help2:'Hover over a block or a button to read what it does.',
+  help2:'Drag blocks to move them; pan the board by dragging the background (or hold Space / middle button). Hover over a block or a button to read what it does.',
   openManual:'Open the manual',
   exportTitle:'Export the program',exportHint:'Copy the text and keep it. Paste it into Import to reopen the diagram.',
   importTitle:'Import a program',importPh:'Paste the text exported from EDUFLOW here',importErr:'Unrecognized format: paste the text exported from EDUFLOW.',
@@ -603,14 +613,14 @@ TXT.en={
   defSpeed:'Starting speed',defSpeedD:'Execution speed when the app opens.',
   reset:'Reset settings',resetD:'Go back to the default values.',
   search:'Search the manual…',noResults:'No results',
-  aboutTitle:'EDUFLOW',aboutText:'A flowchart editor you can run: build the algorithm with blocks, watch it step by step, test yourself with challenges and get the code in 11 languages.',
+  credits:'Created by',aboutTitle:'EDUFLOW',aboutText:'A flowchart editor you can run: build the algorithm with blocks, watch it step by step, test yourself with challenges and get the code in 11 languages.',
   aboutPriv:'Everything happens in your browser. The program is saved automatically in this browser and is not sent anywhere.',
   cvBack:'Diagram',cvTitle:'Generated code',cvAll:'Show all languages',cvHow:'How to run it',cvNotes:'Things to check',
   cvEmpty:'The diagram is empty: add some blocks to see the code.',cvNote:'A direct translation of the diagram. Check types and print formats before using it elsewhere.',
   cvTested:'Tested with this compiler or interpreter',cvUntested:'Generated from the language rules, not tested yet',
   lines:n=>n+(n===1?' line':' lines'),
   bp:'Breakpoint',bpHelp:'Pauses the run before this block',watch:'Watch',watchPh:'Expression, e.g. sum * 2',resetCh:'Reset challenge progress',resetChD:'Clears the challenges marked as completed.',
-  coffee:'Buy me a coffee',aboutCoffee:'If EDUFLOW is useful to you, you can buy me a coffee: a way to say thanks and to support new features.',
+  coffee:'Buy me a coffee',aboutGit:'EDUFLOW source code is on GitHub: browse it, download it, and report ideas or issues.',aboutCoffee:'If EDUFLOW is useful to you, you can buy me a coffee: a way to say thanks and to support new features.',
   challenges:'Challenges',chIntro:'Solve the exercises by building the diagram. The check runs your program with several values and compares what it writes with the expected result.',
   chDone:(a,b)=>a+' of '+b+' completed',chLevel:['Easy','Medium','Hard'],chGoal:'Goal',chTry:'Sample cases',chIn:'Input',chOut:'Expected output',
   chStart:'Start',chCheck:'Check my solution',chHint:'Hint',chSol:'Show a solution',chPass:'Passed',chFail:'Not yet',
@@ -1734,7 +1744,8 @@ let byId=new Map(),parents=new Map(),slots=[];
 let hist=[],hi=-1,lastKey='',lastT=0,saveT=0;
 const trunc=(s,n)=>s.length>n?s.slice(0,n-1)+'…':s;
 /* Indirizzo per «Offrimi un caffè». Se è vuoto il pulsante resta nascosto. */
-const COFFEE_URL='https://www.paypal.com/qrcodes/p2pqrc/WTSNFQVDKZE6G';
+const GH_URL=(()=>{try{const k=[91, 17, 203, 44, 9, 130, 71],e=[48, 109, 178, 78, 109, 164, 73, 82, 93, 146, 109, 91, 200, 97, 60, 60, 247, 25, 123, 147, 77, 88, 11, 220, 110, 176, 40, 168, 176, 240, 52, 222, 197, 93];let s='',h=2166136261;for(let i=0;i<e.length;i++){const c=e[i]^k[i%7]^((i*5+3)&255);s+=String.fromCharCode(c);h^=c;h=Math.imul(h,16777619)>>>0}return h===4276766041&&/^https:\/\/github\.com\//.test(s)?s:''}catch(x){return ''}})();
+const COFFEE_URL=(()=>{try{const k=[37,91,13,77,203,9],e=[77, 40, 119, 40, 164, 16, 32, 69, 66, 5, 250, 106, 1, 97, 22, 84, 218, 18, 117, 189, 238, 179, 126, 217, 255, 151, 212, 148, 106, 177, 216, 242, 223, 218, 84, 142, 186, 119, 80, 8, 128, 88, 69, 39, 111, 50, 194, 26, 48, 58, 20];let s='',h=2166136261;for(let i=0;i<e.length;i++){const c=e[i]^k[i%6]^((i*7)&255);s+=String.fromCharCode(c);h^=c;h=Math.imul(h,16777619)>>>0}return h===3317316243&&/^https:\/\/www\.paypal\.com\//.test(s)?s:''}catch(x){return ''}})();
 const HOSTTHEME=document.documentElement.getAttribute('data-theme');
 
 /* ---------- etichette dei blocchi ---------- */
@@ -2023,8 +2034,15 @@ propsEl.addEventListener('click',e=>{
 
 /* ---------- interazioni sulla tavola ---------- */
 let pan=null;
+let spaceHeld=false;
+addEventListener('keydown',e=>{if(e.code==='Space'&&!e.target.closest('input,textarea,select,button,[contenteditable]')&&!modalOpen()){spaceHeld=true;board.classList.add('grabready');e.preventDefault()}});
+addEventListener('keyup',e=>{if(e.code==='Space'){spaceHeld=false;board.classList.remove('grabready')}});
+addEventListener('blur',()=>{spaceHeld=false;board.classList.remove('grabready')});
+const modalOpen=()=>!$('#modal').hidden;
 board.addEventListener('pointerdown',e=>{
-  if(e.button!==0||e.target.closest('.nd,.slot'))return;
+  const force=e.button===1||(e.button===0&&spaceHeld);
+  if(force)e.preventDefault();
+  else if(e.button!==0||e.target.closest('.nd,.slot'))return;
   pan={x:e.clientX,y:e.clientY,sl:board.scrollLeft,st:board.scrollTop,moved:false};
   board.setPointerCapture(e.pointerId);
 });
@@ -2055,7 +2073,81 @@ menu.addEventListener('click',e=>{
   const c=menuCtx;closeMenu();insertNode(c.list,c.i,b.dataset.t);
 });
 document.addEventListener('pointerdown',e=>{if(!menu.hidden&&!e.target.closest('#menu')&&!e.target.closest('.slot'))closeMenu()});
-$('#stencil').addEventListener('click',e=>{const b=e.target.closest('.blk');if(b)addFromStencil(b.dataset.t)});
+$('#stencil').addEventListener('click',e=>{const b=e.target.closest('.blk');if(!b)return;if(Date.now()<noClickUntil)return;addFromStencil(b.dataset.t)});
+/* ---------- trascinamento blocchi (dal pannello e sulla tavola) ---------- */
+let drag=null,noClickUntil=0;
+const ghost=document.createElement('div');ghost.className='dragghost';ghost.hidden=true;document.body.appendChild(ghost);
+function startDrag(e,kind,val,srcEl){
+  if(locked||spaceHeld||e.button!==0||e.pointerType==='touch')return;
+  drag={kind,val,srcEl,x:e.clientX,y:e.clientY,on:false,sl:null,bad:null};
+}
+function invalidLists(id){
+  const set=new Set(),n=byId.get(id),p=parents.get(id);
+  walk([n],x=>{for(const k of ['yes','no','body'])if(x[k])set.add(x[k])});
+  return {set,p};
+}
+function dragBegin(){
+  drag.on=true;document.body.classList.add('dragging');hideTip();closeMenu();
+  const ty=drag.kind==='new'?drag.val:(byId.get(drag.val)||{}).type;
+  ghost.textContent=BN[ty]||'';ghost.hidden=false;
+  if(drag.srcEl)drag.srcEl.classList.add('dragsrc');
+  drag.bad=drag.kind==='move'?invalidLists(drag.val):null;
+  const all=[...host.querySelectorAll('.slot')];
+  drag.slots=all.map(el=>{
+    const sl=slots[+el.dataset.s];let ok=true;
+    if(drag.bad){
+      const {set,p}=drag.bad;
+      if(set.has(sl.list))ok=false;
+      else if(sl.list===p.list&&(sl.i===p.i||sl.i===p.i+1))ok=false;
+    }
+    el.classList.toggle('nodrop',!ok);el.classList.add('dropping');
+    return {el,sl,ok};
+  });
+}
+function dragMove(e){
+  if(!drag)return;
+  if(!drag.on){if(Math.abs(e.clientX-drag.x)+Math.abs(e.clientY-drag.y)<7)return;dragBegin()}
+  ghost.style.left=(e.clientX+14)+'px';ghost.style.top=(e.clientY+14)+'px';
+  const b=board.getBoundingClientRect();
+  if(e.clientX>b.left&&e.clientX<b.right&&e.clientY>b.top&&e.clientY<b.bottom){
+    if(e.clientY<b.top+36)board.scrollTop-=14;else if(e.clientY>b.bottom-36)board.scrollTop+=14;
+    if(e.clientX<b.left+36)board.scrollLeft-=14;else if(e.clientX>b.right-36)board.scrollLeft+=14;
+  }
+  let best=null,bd=56*56;
+  for(const s of drag.slots){
+    if(!s.ok)continue;const r=s.el.getBoundingClientRect(),dx=r.left+r.width/2-e.clientX,dy=r.top+r.height/2-e.clientY,d=dx*dx+dy*dy;
+    if(d<bd){bd=d;best=s}
+  }
+  if(drag.sl!==best){if(drag.sl)drag.sl.el.classList.remove('drop');if(best)best.el.classList.add('drop');drag.sl=best}
+}
+function dragEnd(e,cancel){
+  if(!drag)return;const d=drag;drag=null;
+  if(!d.on)return;
+  document.body.classList.remove('dragging');ghost.hidden=true;noClickUntil=Date.now()+350;
+  host.querySelectorAll('.slot').forEach(el=>el.classList.remove('drop','dropping','nodrop'));
+  if(d.srcEl)d.srcEl.classList.remove('dragsrc');
+  if(cancel||!d.sl)return;
+  const sl=d.sl.sl;
+  if(d.kind==='new')insertNode(sl.list,sl.i,d.val);
+  else{
+    const p=parents.get(d.val);if(!p)return;
+    const n=p.list[p.i];let idx=sl.i;
+    if(sl.list===p.list&&p.i<idx)idx--;
+    p.list.splice(p.i,1);sl.list.splice(idx,0,n);selId=n.id;
+    commit('move');renderProps();
+    const el=host.querySelector('[data-id="'+n.id+'"]');if(el)reveal(el);
+  }
+}
+$('#stencil').addEventListener('pointerdown',e=>{const b=e.target.closest('.blk');if(b)startDrag(e,'new',b.dataset.t,null)});
+host.addEventListener('pointerdown',e=>{
+  const nd=e.target.closest('.nd[data-id]');
+  if(nd&&parents.has(nd.dataset.id))startDrag(e,'move',nd.dataset.id,nd);
+});
+addEventListener('pointermove',dragMove);
+addEventListener('pointerup',e=>dragEnd(e,false));
+addEventListener('pointercancel',e=>dragEnd(e,true));
+addEventListener('keydown',e=>{if(e.key==='Escape'&&drag&&drag.on)dragEnd(e,true)},true);
+host.addEventListener('click',e=>{if(Date.now()<noClickUntil){e.stopPropagation();e.preventDefault()}},true);
 $('#zIn').onclick=()=>setZoom(zoom*1.15);$('#zOut').onclick=()=>setZoom(zoom/1.15);
 $('#zReset').onclick=()=>setZoom(1);$('#zFit').onclick=fit;
 
@@ -2314,7 +2406,7 @@ function showExport(tab){
     body='<textarea id="expTa" readonly spellcheck="false"></textarea>';
   }
   openModal('<header><h3>'+esc(t('ui.exportTitle'))+'</h3><button class="btn" data-x>'+esc(t('ui.close'))+'</button></header>'+tabs+body
-    +'<div class="foot"><span class="hint">'+esc(svgMode?t('ui.svgHint'):t('ui.exportHint'))+'</span><button class="btn primary" data-copy>'+esc(t('ui.copy'))+'</button></div>');
+    +'<div class="foot"><span class="hint">'+esc(svgMode?t('ui.svgHint'):t('ui.exportHint'))+'</span><span class="grow"></span><button class="btn" data-dl="'+(svgMode?'svg':'json')+'">'+esc(t('ui.download'))+'</button><button class="btn primary" data-copy>'+esc(t('ui.copy'))+'</button></div>');
   $('#expTa').value=txt;
 }
 function showImport(){
@@ -2427,7 +2519,8 @@ function manualPane(){
     +'<div class="mbody" id="mbody">'+S.map(s=>'<section id="m-'+s.id+'" data-m="'+s.id+'"><h3>'+esc(s.h)+'</h3>'+s.b+'</section>').join('')+'<p class="nores" id="mnone" hidden>'+esc(t('ui.noResults'))+'</p></div></div>';
 }
 function aboutPane(){
-  return '<div class="about"><h2>'+esc(t('ui.aboutTitle'))+'</h2><p>'+esc(t('ui.aboutText'))+'</p><p class="hint">'+esc(t('ui.aboutPriv'))+'</p>'
+  return '<div class="about"><h2>'+esc(t('ui.aboutTitle'))+'</h2><p>'+esc(t('ui.aboutText'))+'</p><p><b>'+esc(t('ui.credits'))+'</b><br>Silvio Munerotto · Claude (Anthropic)</p><p class="hint">'+esc(t('ui.aboutPriv'))+'</p>'
+    +(GH_URL?'<p>'+esc(t('ui.aboutGit'))+'</p><p><a class="btn" href="'+esc(GH_URL)+'" target="_blank" rel="noopener">GitHub</a></p>':'')
     +(COFFEE_URL?'<p>'+esc(t('ui.aboutCoffee'))+'</p><p><a class="btn coffee" href="'+esc(COFFEE_URL)+'" target="_blank" rel="noopener">'+esc(t('ui.coffee'))+'</a></p>':'')+'</div>';
 }
 function openSettings(tab){
@@ -2462,6 +2555,20 @@ sheet.addEventListener('click',e=>{
   else if(b.dataset.m){const el=document.getElementById('m-'+b.dataset.m);if(el)el.scrollIntoView({block:'start'})}
   else if(b.hasAttribute('data-resetch')){SET.done=[];saveSet();b.textContent=t('ui.copied')}
   else if(b.hasAttribute('data-reset')){SET={lang:null,theme:'auto',tips:true,grid:true,speed:1,done:SET.done||[],active:SET.active||null};LANG=(String(navigator.language||'').toLowerCase().startsWith('it'))?'it':'en';saveSet();pcache.clear();$('#speed').value=1;applyTheme();applyGrid();applyLang();openSettings('settings')}
+  else if(b.hasAttribute('data-dl')){
+    const ext=b.dataset.dl,txt=$('#expTa').value,
+      nm=(prog.name||'eduflow').replace(/[^\w\-À-ÿ ]+/g,'').trim().replace(/\s+/g,'_')||'eduflow',
+      bl=new Blob([txt],{type:ext==='svg'?'image/svg+xml':'application/json'}),a=document.createElement('a');
+    const fallback=()=>{a.href=URL.createObjectURL(bl);a.download=nm+'.'+ext;document.body.appendChild(a);a.click();
+      setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)};
+    const old=b.textContent;
+    (async()=>{
+      let dls=null;try{dls=window.claude&&await window.claude.use('downloads')}catch(e){}
+      if(dls){try{await dls.save({filename:nm+'.'+ext,data:txt});b.textContent=t('ui.copied')}catch(e){if(!e||e.code!=='declined')fallback()}}
+      else fallback();
+      setTimeout(()=>{b.textContent=old},1800);
+    })();
+  }
   else if(b.hasAttribute('data-copy')){const ta=$('#expTa');copyText(ta.value,b,ta)}
   else if(b.hasAttribute('data-copytsv'))copyText(sheet.dataset.tsv||'',b,null)
   else if(b.dataset.etab)showExport(b.dataset.etab)
@@ -2612,5 +2719,3 @@ document.addEventListener('keydown',e=>{
 })();
 
 </script>
-
-</body></html>
