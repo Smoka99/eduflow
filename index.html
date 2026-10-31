@@ -1,3 +1,4 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <!--
   EDUFLOW - Copyright (c) 2026 Silvio Munerotto. Created by Silvio Munerotto with Claude (Anthropic).
   https://github.com/smoka99/eduflow
@@ -345,6 +346,14 @@ pre.code code{display:block;width:max-content;min-width:100%}
   .chlist{flex-direction:row;overflow-x:auto}.chlist button{flex:none}
 }
 @media (prefers-reduced-motion:reduce){.chg td{animation:none}.slot .dot{transition:none}.mbody{scroll-behavior:auto}}
+</style>
+
+<style>
+.help.min{display:flex;align-items:center;justify-content:space-between;gap:8px}.help.min p{margin:0;color:var(--muted);font-size:13px}
+.dllist h4{margin:12px 0 4px;font:600 12px var(--mono);text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.dlrow{display:flex;flex-direction:column;align-items:flex-start;gap:1px;width:100%;text-align:left;padding:8px 10px;margin:3px 0;border:1px solid var(--line);background:var(--panel);border-radius:4px;cursor:pointer;color:var(--ink)}
+.dlrow:hover,.dlrow:focus-visible{border-color:var(--accent);background:var(--accent-soft)}
+.dlrow span{font-size:12px;color:var(--muted)}
 </style>
 
 <header class="top">
@@ -2029,8 +2038,17 @@ const FIELDS={
   comment:[['text','text','area']],
 };
 function helpHtml(){
+  return '<div class="help min"><p>'+esc(M('Seleziona un blocco per modificarlo.','Select a block to edit it.'))+'</p><button class="btn sm" data-a="manual">'+esc(t('ui.helpTitle'))+'</button></div>';
+}
+function helpHtmlOld(){
   return '<div class="help"><h3>'+esc(t('ui.helpTitle'))+'</h3><p>'+esc(t('ui.help1'))+'</p><p>'+esc(t('ui.help2'))+'</p><button class="btn" data-a="manual">'+esc(t('ui.openManual'))+'</button></div>';
 }
+function showWelcome(){
+  openModal('<header><h3>'+esc(M('Benvenuto in EDUFLOW','Welcome to EDUFLOW'))+'</h3><button class="btn" data-x data-seen>'+esc(t('ui.close'))+'</button></header><div class="about">'
+    +'<p>'+esc(t('ui.help1'))+'</p><p>'+esc(M('Trascina i blocchi per spostarli; sposta la tavola trascinando lo sfondo (o tenendo premuto Spazio). Accendi <b>Tutor</b> per farti spiegare ogni passo.'.replace(/<\/?b>/g,''),'Drag blocks to move them; pan the board by dragging the background (or holding Space). Turn on Tutor to have every step explained.'.replace(/<\/?b>/g,'')))+'</p><p>'+esc(t('ui.help2'))+'</p>'
+    +'<p><button class="btn primary" data-x data-seen>'+esc(M('Iniziamo','Let\'s start'))+'</button> <button class="btn" data-a="manual" data-seen>'+esc(t('ui.openManual'))+'</button></p></div>');
+}
+function markSeen(){if(!SET.seen){SET.seen=true;saveSet()}}
 function renderProps(){
   const n=selId&&byId.get(selId);
   if(!n){propsEl.innerHTML=helpHtml();return}
@@ -2343,11 +2361,16 @@ const io={
     });
   }
 };
-$('#inform').addEventListener('submit',e=>{
-  e.preventDefault();if(!inputWait)return;
-  const v=$('#inval').value,w=inputWait;inputWait=null;
+function submitInput(v){
+  if(!inputWait)return;
+  const w=inputWait;inputWait=null;
   $('#inform').hidden=true;out(v+'\n','in');setStatus(()=>t('ui.running'));w.res(v);
-});
+  if(tOn())tRender();
+}
+/* niente invio del <form>: in una pagina incorporata senza "allow-forms" il browser lo blocca */
+$('#inform').addEventListener('submit',e=>{e.preventDefault();submitInput($('#inval').value)});
+$('#inval').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();submitInput($('#inval').value)}});
+$('#inform').addEventListener('click',e=>{const b=e.target.closest('button');if(b){e.preventDefault();submitInput($('#inval').value)}});
 async function startRun(paused){
   conEl.textContent='';outBuf=[];prevVars=new Map();failId=null;curId=null;
   if(tOn())tutorStart();ctl=makeCtl(paused||tOn());ctl.trace={rows:[],pending:null,total:0};runState='running';lock(true);setBtns();setStatus(()=>t('ui.running'));renderVars();
@@ -2551,13 +2574,9 @@ tutorEl.addEventListener('click',e=>{
     const ok=(b.dataset.v==='1')===tut.cur.pred.val;tut.cur.ans={ok};tut.score.tot++;if(ok)tut.score.ok++;tRender();
   }
 });
-tutorEl.addEventListener('submit',e=>{
-  if(e.target.id!=='tInform')return;
-  e.preventDefault();if(!inputWait)return;
-  $('#inval').value=$('#tInval').value;
-  $('#inform').requestSubmit?$('#inform').requestSubmit():$('#inform').dispatchEvent(new Event('submit',{cancelable:true}));
-  tRender();
-});
+tutorEl.addEventListener('submit',e=>{if(e.target.id==='tInform')e.preventDefault()});
+tutorEl.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.id==='tInval'){e.preventDefault();submitInput($('#tInval').value)}});
+tutorEl.addEventListener('click',e=>{const b=e.target.closest('#tInform button');if(b){e.preventDefault();submitInput($('#tInval').value)}});
 tutorEl.addEventListener('change',e=>{
   if(e.target.id==='tLevel'){SET.tlevel=e.target.value;saveSet();if(tut&&tut.cur&&tut.mode==='step'){const keep=tut.cur;try{const o=tText(keep.n,keep.ph||{});Object.assign(keep,{body:o.body,after:o.after})}catch(x){}}tRender()}
   else if(e.target.id==='tPred'){SET.tpred=e.target.checked;saveSet();tRender()}
@@ -2612,6 +2631,110 @@ function showExport(tab){
   openModal('<header><h3>'+esc(t('ui.exportTitle'))+'</h3><button class="btn" data-x>'+esc(t('ui.close'))+'</button></header>'+tabs+body
     +'<div class="foot"><span class="hint">'+esc(svgMode?t('ui.svgHint'):t('ui.exportHint'))+'</span><span class="grow"></span><button class="btn" data-dl="'+(svgMode?'svg':'json')+'">'+esc(t('ui.download'))+'</button><button class="btn primary" data-copy>'+esc(t('ui.copy'))+'</button></div>');
   $('#expTa').value=txt;
+}
+
+/* ---------- download: scegli cosa salvare ---------- */
+const fileBase=()=>(prog.name||'eduflow').replace(/[^\w\-À-ÿ ]+/g,'').trim().replace(/\s+/g,'_')||'eduflow';
+async function saveFile(name,data){
+  let dls=null;try{dls=window.claude&&await window.claude.use('downloads')}catch(e){}
+  if(dls){try{await dls.save({filename:name,data});return true}catch(e){if(e&&e.code==='declined')return false}}
+  const bl=data instanceof Blob?data:new Blob([data],{type:'application/octet-stream'}),a=document.createElement('a');
+  a.href=URL.createObjectURL(bl);a.download=name;document.body.appendChild(a);a.click();
+  setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500);return true;
+}
+function lightSvg(){
+  const r=document.documentElement,prev=r.getAttribute('data-theme');
+  r.setAttribute('data-theme','light');
+  let s;try{s=svgExportText()}finally{if(prev===null)r.removeAttribute('data-theme');else r.setAttribute('data-theme',prev)}
+  return s;
+}
+function svgToCanvas(svg,scale){
+  return new Promise((res,rej)=>{
+    const img=new Image();
+    img.onload=()=>{
+      const w=Math.max(1,Math.round(dim.W*scale)),h=Math.max(1,Math.round(dim.H*scale));
+      const cv=document.createElement('canvas');cv.width=w;cv.height=h;
+      const cx=cv.getContext('2d');cx.fillStyle='#fff';cx.fillRect(0,0,w,h);cx.drawImage(img,0,0,w,h);res(cv);
+    };
+    img.onerror=()=>rej(new Error('img'));
+    img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);
+  });
+}
+const canvasBlob=(cv,type,q)=>new Promise((res,rej)=>cv.toBlob(b=>b?res(b):rej(new Error('blob')),type,q));
+function pdfBuild(title,jpg,jw,jh,codeLines){
+  const enc=new TextEncoder(),parts=[],offs=[];let len=0;
+  const push=x=>{const b=typeof x==='string'?enc.encode(x):x;parts.push(b);len+=b.length};
+  const objs=[];const W=595,H=842,M0=40;
+  const lat=s=>String(s).replace(/[‘’]/g,"'").replace(/[“”]/g,'"').replace(/[^\x20-\x7E -ÿ]/g,'?');
+  const esc2=s=>lat(s).replace(/\\/g,'\\\\').replace(/\(/g,'\\(').replace(/\)/g,'\\)');
+  // pagina 1: titolo + immagine
+  const maxW=W-2*M0,maxH=H-2*M0-40,sc=Math.min(maxW/jw,maxH/jh,1),dw=jw*sc,dh=jh*sc;
+  const pages=[];
+  pages.push('BT /F2 16 Tf '+M0+' '+(H-M0-10)+' Td ('+esc2(title)+') Tj ET\nq '+dw.toFixed(2)+' 0 0 '+dh.toFixed(2)+' '+M0+' '+(H-M0-40-dh).toFixed(2)+' cm /Im0 Do Q');
+  if(codeLines&&codeLines.length){
+    const per=Math.floor((H-2*M0)/10.5),cols=95;
+    const wrapped=[];for(const l of codeLines){let s=l.replace(/\t/g,'  ');if(!s.length)wrapped.push('');while(s.length>cols){wrapped.push(s.slice(0,cols));s='    '+s.slice(cols)}if(s.length)wrapped.push(s)}
+    for(let i=0;i<wrapped.length;i+=per){
+      let c='BT /F1 8.5 Tf 10.5 TL '+M0+' '+(H-M0)+' Td\n';
+      for(const l of wrapped.slice(i,i+per))c+='('+esc2(l)+') Tj T*\n';
+      pages.push(c+'ET');
+    }
+  }
+  // oggetti: 1 catalog, 2 pages, 3 F1, 4 F2, 5 image, poi (pagina, contenuto) a coppie
+  const kids=[];
+  const o=[];
+  o[1]='<< /Type /Catalog /Pages 2 0 R >>';
+  o[3]='<< /Type /Font /Subtype /Type1 /BaseFont /Courier /Encoding /WinAnsiEncoding >>';
+  o[4]='<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>';
+  pages.forEach((c,i)=>{
+    const pn=6+i*2,cn=pn+1;kids.push(pn+' 0 R');
+    o[pn]='<< /Type /Page /Parent 2 0 R /MediaBox [0 0 '+W+' '+H+'] /Resources << /Font << /F1 3 0 R /F2 4 0 R >>'+(i===0?' /XObject << /Im0 5 0 R >>':'')+' >> /Contents '+cn+' 0 R >>';
+    o[cn]={stream:Uint8Array.from(c,ch=>ch.charCodeAt(0)&255),dict:''};
+  });
+  o[2]='<< /Type /Pages /Kids ['+kids.join(' ')+'] /Count '+kids.length+' >>';
+  o[5]={stream:jpg,dict:'/Type /XObject /Subtype /Image /Width '+jw+' /Height '+jh+' /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode'};
+  push('%PDF-1.4\n');
+  for(let i=1;i<o.length;i++){
+    offs[i]=len;push(i+' 0 obj\n');
+    if(typeof o[i]==='string')push(o[i]);
+    else{const s=o[i].stream;push('<< '+o[i].dict+' /Length '+s.length+' >>\nstream\n');push(s);push('\nendstream')}
+    push('\nendobj\n');
+  }
+  const xr=len;push('xref\n0 '+o.length+'\n0000000000 65535 f \n');
+  for(let i=1;i<o.length;i++)push(String(offs[i]).padStart(10,'0')+' 00000 n \n');
+  push('trailer\n<< /Size '+o.length+' /Root 1 0 R >>\nstartxref\n'+xr+'\n%%EOF');
+  const out=new Uint8Array(len);let p=0;for(const b of parts){out.set(b,p);p+=b.length}
+  return out;
+}
+function showDownload(){
+  const row=(k,title,desc)=>'<button class="dlrow" data-dlk="'+k+'"><b>'+esc(title)+'</b><span>'+esc(desc)+'</span></button>';
+  openModal('<header><h3>'+esc(M('Cosa vuoi salvare?','What do you want to save?'))+'</h3><button class="btn" data-x>'+esc(t('ui.close'))+'</button></header><div class="dllist">'
+    +'<h4>'+esc(M('Diagramma','Diagram'))+'</h4>'
+    +row('json','JSON (.json)',M('Il programma, da reimportare in EDUFLOW','The program, to import back into EDUFLOW'))
+    +row('svg',M('Immagine SVG (.svg)','SVG image (.svg)'),M('Vettoriale, nitida a qualsiasi zoom','Vector, sharp at any zoom'))
+    +row('png',M('Immagine PNG (.png)','PNG image (.png)'),M('Su sfondo bianco, per documenti e slide','On white background, for documents and slides'))
+    +row('pdf','PDF (.pdf)',M('Il diagramma su una pagina, pronto da stampare','The diagram on one page, ready to print'))
+    +row('pdfcode',M('PDF con diagramma e codice','PDF with diagram and code'),M('Diagramma + codice C++ nelle pagine seguenti','Diagram + C++ code on the following pages'))
+    +'<h4>'+esc(M('Codice del programma','Program code'))+'</h4>'
+    +LANGS.map(id=>row('code:'+id,LG[id].name+' ('+LG[id].file+')',M('Codice pronto da compilare o eseguire','Code ready to compile or run'))).join('')
+    +'<p class="hint" id="dlmsg"></p></div>');
+}
+async function doDownload(k,btn){
+  const msg=$('#dlmsg'),base=fileBase();let ok=true;
+  const say=s=>{if(msg)msg.textContent=s};
+  try{
+    if(k==='json')ok=await saveFile(base+'.json',new Blob([JSON.stringify({app:'eduflow',version:2,name:prog.name,body:JSON.parse(snap()).body},null,1)],{type:'application/json'}));
+    else if(k==='svg')ok=await saveFile(base+'.svg',new Blob([svgExportText()],{type:'image/svg+xml'}));
+    else if(k==='png'){const cv=await svgToCanvas(lightSvg(),Math.min(3,3000/Math.max(dim.W,dim.H)));ok=await saveFile(base+'.png',await canvasBlob(cv,'image/png'))}
+    else if(k==='pdf'||k==='pdfcode'){
+      const cv=await svgToCanvas(lightSvg(),Math.min(2.5,2500/Math.max(dim.W,dim.H)));
+      const jb=await canvasBlob(cv,'image/jpeg',0.92),jpg=new Uint8Array(await jb.arrayBuffer());
+      const code=k==='pdfcode'?gen(prog,'cpp').code.replace(/\n$/,'').split('\n'):null;
+      ok=await saveFile(base+(code?'_'+M('codice','code'):'')+'.pdf',new Blob([pdfBuild(prog.name||'EDUFLOW',jpg,cv.width,cv.height,code)],{type:'application/pdf'}));
+    }
+    else if(k.startsWith('code:')){const id=k.slice(5);ok=await saveFile(LG[id].file,new Blob([gen(prog,id).code],{type:'text/plain'}))}
+    say(ok?M('Fatto: controlla i file scaricati.','Done: check your downloads.'):M('Salvataggio annullato.','Save cancelled.'));
+  }catch(e){say(M('Non sono riuscito a creare il file: ','Could not create the file: ')+(e&&e.message||''))}
 }
 function showImport(){
   openModal('<header><h3>'+esc(t('ui.importTitle'))+'</h3><button class="btn" data-x>'+esc(t('ui.close'))+'</button></header>'
@@ -2754,6 +2877,8 @@ sheet.addEventListener('change',e=>{
 });
 sheet.addEventListener('click',e=>{
   const b=e.target.closest('button');if(!b)return;
+  if(b.hasAttribute('data-seen'))markSeen();
+  if(b.dataset.a==='manual'){openSettings('manual');return}
   if(b.hasAttribute('data-x'))closeModal();
   else if(b.dataset.tab){curTab=b.dataset.tab;openSettings(curTab)}
   else if(b.dataset.lang){setLang(b.dataset.lang)}
@@ -2761,20 +2886,8 @@ sheet.addEventListener('click',e=>{
   else if(b.dataset.m){const el=document.getElementById('m-'+b.dataset.m);if(el)el.scrollIntoView({block:'start'})}
   else if(b.hasAttribute('data-resetch')){SET.done=[];saveSet();b.textContent=t('ui.copied')}
   else if(b.hasAttribute('data-reset')){SET={lang:null,theme:'auto',tips:true,grid:true,speed:1,done:SET.done||[],active:SET.active||null,tutor:false};LANG=(String(navigator.language||'').toLowerCase().startsWith('it'))?'it':'en';saveSet();pcache.clear();$('#speed').value=1;applyTheme();applyGrid();applyLang();applyTutor();openSettings('settings')}
-  else if(b.hasAttribute('data-dl')){
-    const ext=b.dataset.dl,txt=$('#expTa').value,
-      nm=(prog.name||'eduflow').replace(/[^\w\-À-ÿ ]+/g,'').trim().replace(/\s+/g,'_')||'eduflow',
-      bl=new Blob([txt],{type:ext==='svg'?'image/svg+xml':'application/json'}),a=document.createElement('a');
-    const fallback=()=>{a.href=URL.createObjectURL(bl);a.download=nm+'.'+ext;document.body.appendChild(a);a.click();
-      setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)};
-    const old=b.textContent;
-    (async()=>{
-      let dls=null;try{dls=window.claude&&await window.claude.use('downloads')}catch(e){}
-      if(dls){try{await dls.save({filename:nm+'.'+ext,data:txt});b.textContent=t('ui.copied')}catch(e){if(!e||e.code!=='declined')fallback()}}
-      else fallback();
-      setTimeout(()=>{b.textContent=old},1800);
-    })();
-  }
+  else if(b.hasAttribute('data-dl')){showDownload()}
+  else if(b.hasAttribute('data-dlk')){doDownload(b.dataset.dlk,b)}
   else if(b.hasAttribute('data-copy')){const ta=$('#expTa');copyText(ta.value,b,ta)}
   else if(b.hasAttribute('data-copytsv'))copyText(sheet.dataset.tsv||'',b,null)
   else if(b.dataset.etab)showExport(b.dataset.etab)
@@ -2915,6 +3028,7 @@ document.addEventListener('keydown',e=>{
   $('#speed').value=SET.speed;
   $('#watchIn').value=SET.watch||'';
   applyTheme();applyGrid();applyTutor();
+  if(!SET.seen&&!location.hash)setTimeout(showWelcome,350);
   let o=null;
   try{const s=localStorage.getItem('flussi.v1');if(s){o=JSON.parse(s);if(!o||!Array.isArray(o.body)||!o.body.length)o=null}}catch(e){o=null}
   hist=[];
@@ -2925,3 +3039,5 @@ document.addEventListener('keydown',e=>{
 })();
 
 </script>
+
+</body></html>
