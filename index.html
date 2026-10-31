@@ -1,4 +1,3 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <!--
   EDUFLOW - Copyright (c) 2026 Silvio Munerotto. Created by Silvio Munerotto with Claude (Anthropic).
   https://github.com/smoka99/eduflow
@@ -163,7 +162,11 @@ td{padding:2px 6px;border-top:1px solid var(--line);overflow-wrap:anywhere}
 #inform label{align-self:center;color:var(--muted);font-size:12px;max-width:45%}
 #inval{flex:1;min-width:0;border:1px solid var(--accent);background:var(--bg);border-radius:3px;padding:4px 7px;font:13px var(--mono)}
 
-#tutorCard{flex:0 0 auto;border-color:var(--accent)}
+#tutorCard{position:absolute;left:12px;bottom:12px;right:214px;max-width:660px;max-height:46%;overflow:auto;z-index:6;border-color:var(--accent);box-shadow:0 8px 28px var(--shadow);padding:8px 12px}
+#tutorCard.moved{right:auto;bottom:auto;width:min(560px,calc(100% - 24px))}
+#tutorCard .chead h4{cursor:grab;user-select:none}
+#tutorCard .tmin{border:0;background:transparent;cursor:pointer;font-size:16px;line-height:1;color:var(--muted);padding:2px 6px}
+#tutorCard.mini .tmsg,#tutorCard.mini .tans,#tutorCard.mini .tq,#tutorCard.mini .tdone,#tutorCard.mini .tscore{display:none}
 #tutorCard .chead{align-items:center;flex-wrap:wrap}
 #tutorCard .topts{display:flex;align-items:center;gap:8px;font-size:12px}
 #tutorCard .topts label{display:flex;align-items:center;gap:4px;cursor:pointer}
@@ -323,6 +326,7 @@ pre.code code{display:block;width:max-content;min-width:100%}
 .empty{color:var(--muted);padding:20px 0}
 
 @media (max-width:900px){
+  #tutorCard,#tutorCard.moved{position:fixed;left:8px;right:8px;top:auto!important;bottom:8px;width:auto;max-width:none;max-height:44vh;z-index:60}
   html,body{height:auto}
   body{display:block}
   .top{margin-bottom:10px}
@@ -391,6 +395,7 @@ pre.code code{display:block;width:max-content;min-width:100%}
     <section class="boardwrap">
       <div class="board" id="board"><div id="host"></div></div>
       <div class="chbar" id="chbar" hidden></div>
+      <section class="card" id="tutorCard" hidden></section>
       <div class="zoom">
         <button class="btn icon" id="zOut" data-tip="ui:zoom" data-i18n-aria="ui.zoomOut">−</button>
         <button class="btn z" id="zReset" data-tip="ui:zoom" data-i18n-aria="ui.zoomReset">100%</button>
@@ -400,7 +405,6 @@ pre.code code{display:block;width:max-content;min-width:100%}
     </section>
     <aside class="side">
       <section class="card" id="props"></section>
-      <section class="card" id="tutorCard" hidden></section>
       <section class="card" id="vars"></section>
       <section class="card" id="watchCard"><div class="chead" data-tip="ui:watch"><h4 data-i18n="ui.watch"></h4><span id="watchOut" class="wout"></span></div><input id="watchIn" type="text" data-i18n-ph="ui.watchPh" data-i18n-aria="ui.watch" spellcheck="false" autocomplete="off"></section>
       <section class="card" id="cons">
@@ -2018,9 +2022,9 @@ function openMenu(x,y,list,i){
 }
 const closeMenu=()=>{menu.hidden=true;menuCtx=null};
 function reveal(el){
-  const b=board.getBoundingClientRect(),r=el.getBoundingClientRect(),m=40;
+  const b=board.getBoundingClientRect(),r=el.getBoundingClientRect(),m=40,ov=(!tutorEl.hidden&&!tutorEl.classList.contains('moved')&&!matchMedia('(max-width:900px)').matches)?tutorEl.offsetHeight+12:0;
   if(r.top<b.top+m)board.scrollTop-=(b.top+m)-r.top;
-  else if(r.bottom>b.bottom-m)board.scrollTop+=r.bottom-(b.bottom-m);
+  else if(r.bottom>b.bottom-m-ov)board.scrollTop+=r.bottom-(b.bottom-m-ov);
   if(r.left<b.left+m)board.scrollLeft-=(b.left+m)-r.left;
   else if(r.right>b.right-m)board.scrollLeft+=r.right-(b.right-m);
 }
@@ -2051,7 +2055,8 @@ function showWelcome(){
 function markSeen(){if(!SET.seen){SET.seen=true;saveSet()}}
 function renderProps(){
   const n=selId&&byId.get(selId);
-  if(!n){propsEl.innerHTML=helpHtml();return}
+  propsEl.hidden=!n;
+  if(!n){propsEl.innerHTML='';return}
   let h='<h3>'+BN[n.type]+'</h3><p class="psub">'+esc(t('blk.'+n.type+'.short'))+'</p><fieldset '+(locked?'disabled':'')+'>';
   for(const [k,fk,kd,ph] of FIELDS[n.type]){
     const id='f-'+k,lab=esc(t('fld.'+fk));
@@ -2514,9 +2519,9 @@ function tDiffHtml(diff){
   return '<div class="tdone"><b>'+esc(M('Appena successo','Just happened'))+':</b> '+diff.map(d=>d.o===undefined?cd(d.k+' = '+d.n):cd(d.k+': '+d.o+' → '+d.n)).join(' · ')+'</div>';
 }
 function tRender(){
-  if(!tOn()){tutorEl.hidden=true;return}
+  if(!tOn()){tutorEl.hidden=true;tLayout();return}
   tutorEl.hidden=false;
-  const head='<div class="chead"><h4>'+esc(M('Tutor','Tutor'))+'</h4><span class="topts"><select id="tLevel" class="btn sm" aria-label="'+esc(M('Livello','Level'))+'"><option value="beg"'+(tBeg()?' selected':'')+'>'+esc(M('Principiante','Beginner'))+'</option><option value="std"'+(tBeg()?'':' selected')+'>'+esc(M('Normale','Normal'))+'</option></select><label><input type="checkbox" id="tPred"'+(tPredOn()?' checked':'')+'> '+esc(M('Previsioni','Predictions'))+'</label></span></div>';
+  const head='<div class="chead"><h4 title="'+esc(M('Trascina per spostare, doppio clic per rimettere in basso','Drag to move, double-click to dock at the bottom'))+'">'+esc(M('Tutor','Tutor'))+'</h4><span class="topts"><select id="tLevel" class="btn sm" aria-label="'+esc(M('Livello','Level'))+'"><option value="beg"'+(tBeg()?' selected':'')+'>'+esc(M('Principiante','Beginner'))+'</option><option value="std"'+(tBeg()?'':' selected')+'>'+esc(M('Normale','Normal'))+'</option></select><label><input type="checkbox" id="tPred"'+(tPredOn()?' checked':'')+'> '+esc(M('Previsioni','Predictions'))+'</label><button class="tmin" data-tt="min" aria-label="'+esc(M('Riduci o espandi','Collapse or expand'))+'">'+(SET.tmin?'▢':'—')+'</button></span></div>';
   let h=head;const run=runState!=='idle';
   if(!tut||tut.mode==='idle')h+='<p class="tmsg">'+M('Ti accompagno <b>passo per passo</b>: premi <b>Esegui</b> o <b>Passo</b> e ti spiego cosa fa ogni blocco, con i valori veri.','I will guide you <b>step by step</b>: press <b>Run</b> or <b>Step</b> and I explain what each block does, with the real values.')+'</p>';
   else if(tut.mode==='msg')h+='<p class="tmsg">'+tut.msg+'</p>'+(tut.score.tot?tScoreHtml():'');
@@ -2535,7 +2540,7 @@ function tRender(){
   h+='<div class="tacts">'+(!waiting&&run&&ctl&&ctl.paused?'<button class="btn primary" data-tt="next">'+esc(M('Avanti','Next'))+'</button>':'')
     +(tut&&tut.mode==='step'?'<button class="btn" data-tt="why">'+esc(M('Perché?','Why?'))+'</button>':'')
     +(run&&ctl&&!ctl.free?'<button class="btn" data-tt="free">'+esc(M('Esegui tutto','Run all'))+'</button>':'')+'</div>';
-  tutorEl.innerHTML=h;
+  tutorEl.innerHTML=h;tutorEl.classList.toggle('mini',!!SET.tmin&&!waiting);tLayout();
   if(waiting){const f=$('#tInval');if(f){f.focus();tutorEl.scrollIntoView({block:'nearest'})}}
 }
 const tScoreHtml=()=>'<div class="tscore">'+esc(M('Previsioni giuste','Correct predictions'))+': <b>'+tut.score.ok+'/'+tut.score.tot+'</b></div>';
@@ -2570,6 +2575,7 @@ tutorEl.addEventListener('click',e=>{
   if(a==='next')doStep();
   else if(a==='free'){if(ctl){ctl.free=true;if(ctl.paused){ctl.paused=false;if(ctl.waiter)ctl.waiter()}}tRender()}
   else if(a==='why')tWhy();
+  else if(a==='min'){SET.tmin=!SET.tmin;saveSet();tRender()}
   else if(a==='ans'&&tut&&tut.cur&&tut.cur.pred&&tut.cur.ans===null){
     const ok=(b.dataset.v==='1')===tut.cur.pred.val;tut.cur.ans={ok};tut.score.tot++;if(ok)tut.score.ok++;tRender();
   }
@@ -2581,9 +2587,30 @@ tutorEl.addEventListener('change',e=>{
   if(e.target.id==='tLevel'){SET.tlevel=e.target.value;saveSet();if(tut&&tut.cur&&tut.mode==='step'){const keep=tut.cur;try{const o=tText(keep.n,keep.ph||{});Object.assign(keep,{body:o.body,after:o.after})}catch(x){}}tRender()}
   else if(e.target.id==='tPred'){SET.tpred=e.target.checked;saveSet();tRender()}
 });
+function tLayout(){
+  const small=matchMedia('(max-width:900px)').matches,show=!tutorEl.hidden,h=show?tutorEl.offsetHeight:0;
+  host.style.marginBottom=(show&&!small&&!tutorEl.classList.contains('moved'))?(h+24)+'px':'';
+  document.body.style.paddingBottom=(show&&small)?(h+16)+'px':'';
+}
+addEventListener('resize',()=>{if(tOn())tLayout()});
+let tdrag=null;
+tutorEl.addEventListener('pointerdown',e=>{
+  if(!e.target.closest('.chead h4')||e.button!==0||matchMedia('(max-width:900px)').matches)return;
+  const r=tutorEl.getBoundingClientRect(),pr=tutorEl.offsetParent.getBoundingClientRect();
+  tdrag={dx:e.clientX-r.left,dy:e.clientY-r.top,px:pr.left,py:pr.top,pw:pr.width,ph:pr.height};
+  tutorEl.classList.add('moved');tutorEl.setPointerCapture(e.pointerId);e.preventDefault();
+});
+tutorEl.addEventListener('pointermove',e=>{
+  if(!tdrag)return;
+  const w=tutorEl.offsetWidth,hh=tutorEl.offsetHeight;
+  tutorEl.style.left=Math.max(0,Math.min(tdrag.pw-w,e.clientX-tdrag.px-tdrag.dx))+'px';
+  tutorEl.style.top=Math.max(0,Math.min(tdrag.ph-hh,e.clientY-tdrag.py-tdrag.dy))+'px';
+});
+tutorEl.addEventListener('pointerup',()=>{if(tdrag){tdrag=null;tLayout()}});
+tutorEl.addEventListener('dblclick',e=>{if(e.target.closest('.chead h4')){tutorEl.classList.remove('moved');tutorEl.style.left=tutorEl.style.top='';tLayout()}});
 function applyTutor(){
   const b=$('#bTutor');b.setAttribute('aria-pressed',String(tOn()));
-  tutorEl.hidden=!tOn();if(tOn()&&!tut)tutorStart();else tRender();
+  tutorEl.hidden=!tOn();if(tOn()&&!tut)tutorStart();else tRender();tLayout();
 }
 $('#bTutor').onclick=()=>{SET.tutor=!tOn();saveSet();applyTutor();if(!tOn()&&ctl&&ctl.paused&&runState!=='idle'){}};
 
@@ -3039,5 +3066,3 @@ document.addEventListener('keydown',e=>{
 })();
 
 </script>
-
-</body></html>
